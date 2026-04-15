@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import AuthGate from '@/components/AuthGate';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -18,8 +19,9 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <ErrorBoundary>
         <AuthProvider>
-          {/* AuthGate removed temporarily to avoid route redirect loops during local testing */}
+          <AuthGate />
           <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
