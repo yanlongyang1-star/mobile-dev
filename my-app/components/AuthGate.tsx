@@ -1,23 +1,27 @@
 import React, { useEffect } from 'react';
-import { useRouter, usePathname } from 'expo-router';
+import { useRouter, usePathname, useSegments } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthGate() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname() ?? '/';
+  const segments = useSegments();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (loading) return;
 
-    const isAuthRoute = pathname.startsWith('/auth');
+    const isAuthSegment = segments[0] === '(auth)';
 
-    if (!user && !isAuthRoute) {
+    if (!user && !isAuthSegment) {
+      // User not logged in, redirect to login
       router.replace('/auth/login');
-    } else if (user && isAuthRoute) {
+    } else if (user && isAuthSegment) {
+      // User logged in, redirect to home
       router.replace('/');
     }
-  }, [user, loading, pathname, router]);
+  }, [user, loading, segments]); // Removed pathname from dependency
 
   return null;
 }
+
