@@ -9,7 +9,7 @@ export default function Profile() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Profile</Text>
-      <Text>Email: {user?.email ?? 'Not signed in'}</Text>
+      <Text>Username: {user?.username ?? 'Not signed in'}</Text>
       <Button mode="outlined" onPress={signOut} style={styles.button}>
         Sign Out
       </Button>

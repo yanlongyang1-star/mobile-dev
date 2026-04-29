@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { UniLeaseProvider } from '@/contexts/UniLeaseContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -45,7 +46,9 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <RootLayoutNav />
+        <UniLeaseProvider>
+          <RootLayoutNav />
+        </UniLeaseProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

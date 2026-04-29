@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Keyboard, KeyboardAvoidingView, Platform, Text, TextInput } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -6,8 +6,8 @@ import { useRouter } from 'expo-router';
 
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function LoginScreen() {
-  const { signInStep1, loading: authLoading } = useAuth();
+export default function Login2Screen() {
+  const { signInStep2, step1Done, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [username, setUsername] = useState('');
@@ -19,6 +19,10 @@ export default function LoginScreen() {
   const INPUT_BORDER = '#D1D5DB';
   const PLACEHOLDER = '#9CA3AF';
 
+  useEffect(() => {
+    if (!step1Done) router.replace('/auth/login');
+  }, [router, step1Done]);
+
   const onLogin = async () => {
     if (!username || !password) {
       setError('Please fill in all fields');
@@ -27,25 +31,20 @@ export default function LoginScreen() {
 
     setError('');
     Keyboard.dismiss();
-
-    const ok = await signInStep1(username, password);
+    const ok = await signInStep2(username, password);
     if (!ok) {
-      setError('Please enter a student email for both fields (and they must match).');
+      setError('Please enter the same student email for both fields (step 2).');
       return;
     }
-
-    router.replace('/auth/login2');
+    router.replace('/');
   };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-      <ScrollView
-        contentContainerStyle={[styles.container, { backgroundColor: BG }]}
-        scrollEnabled={false}
-      >
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: BG }]} scrollEnabled={false}>
         <View style={styles.card}>
           <View style={[styles.logoCircle, { backgroundColor: `${GREEN}22` }]}>
-            <MaterialIcons name="receipt" size={44} color={GREEN} />
+            <MaterialIcons name="verified" size={44} color={GREEN} />
           </View>
 
           <Text style={styles.brandTitle}>JuiceOps BI</Text>
@@ -104,14 +103,10 @@ export default function LoginScreen() {
               disabled={authLoading}
               activeOpacity={0.9}
             >
-              {authLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.signInButtonText}>Sign In</Text>
-              )}
+              {authLoading ? <ActivityIndicator color="white" /> : <Text style={styles.signInButtonText}>Sign In</Text>}
             </TouchableOpacity>
 
-            <Text style={styles.footerText}>Use your student email for both fields.</Text>
+            <Text style={styles.footerText}>Username 和 Password 都用同一个学生邮箱。</Text>
           </View>
         </View>
       </ScrollView>
@@ -222,3 +217,4 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 });
+

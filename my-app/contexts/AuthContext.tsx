@@ -1,56 +1,76 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/services/firebase';
-import * as AuthService from '@/services/auth';
+import * as React from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
+
+export type UniLeaseUser = { uid: string; username: string };
 
 type AuthContextValue = {
-  user: User | null;
+  user: UniLeaseUser | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<User | null>;
-  signIn: (email: string, password: string) => Promise<User | null>;
+  step1Done: boolean;
+  signInStep1: (username: string, password: string) => Promise<boolean>;
+  signInStep2: (username: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<UniLeaseUser | null>(null);
+  const [step1Done, setStep1Done] = useState(false);
+  const [step1Email, setStep1Email] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // If Firebase `auth` is not initialized (e.g., missing API key), skip auth listener
-    if (!auth) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth as any, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleSignUp = async (email: string, password: string) => {
-    const u = await AuthService.signUp(email, password).catch(() => null);
-    return u;
+  const isValidEmail = (v: string) => {
+    const s = v.trim().toLowerCase();
+    if (!s) return false;
+    // Basic email shape check
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
   };
 
-  const handleSignIn = async (email: string, password: string) => {
-    const u = await AuthService.signIn(email, password).catch(() => null);
-    return u;
-  };
+  const normalize = (v: string) => v.trim();
 
-  const handleSignOut = async () => {
-    await AuthService.signOut();
-  };
+  const value = useMemo<AuthContextValue>(() => {
+    return {
+      user,
+      loading,
+      step1Done,
+      signInStep1: async (username: string, password: string) => {
+        setLoading(true);
+        try {
+          const u = normalize(username);
+          const p = normalize(password);
+          const ok = isValidEmail(u) && isValidEmail(p) && u === p;
+          if (!ok) return false;
+          setStep1Done(true);
+          setStep1Email(u);
+          return true;
+        } finally {
+          setLoading(false);
+        }
+      },
+      signInStep2: async (username: string, password: string) => {
+        setLoading(true);
+        try {
+          if (!step1Done) return false;
+          const u = normalize(username);
+          const p = normalize(password);
+          const ok = isValidEmail(u) && isValidEmail(p) && u === p && step1Email != null && u === step1Email;
+          if (!ok) return false;
+          setUser({ uid: u, username: u });
+          return true;
+        } finally {
+          setLoading(false);
+        }
+      },
+      signOut: async () => {
+        setUser(null);
+        setStep1Done(false);
+        setStep1Email(null);
+      },
+    };
+  }, [loading, step1Done, user, step1Email]);
 
-  return (
-    <AuthContext.Provider value={{ user, loading, signUp: handleSignUp, signIn: handleSignIn, signOut: handleSignOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export function useAuth() {
