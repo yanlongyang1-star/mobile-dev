@@ -39,6 +39,14 @@ export default function BrowseScreen() {
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">UniLease</ThemedText>
         <ThemedText style={styles.subtitle}>Browse items near campus</ThemedText>
+        <TouchableOpacity
+          style={[styles.featureButton, { backgroundColor: buttonBg }]}
+          onPress={() => router.push('/consignment-rental')}
+          activeOpacity={0.95}
+        >
+          <ThemedText style={{ color: '#fff', fontWeight: '900' }}>Consignment & Rental</ThemedText>
+          <ThemedText style={styles.featureButtonSub}>List or rent in a guided flow</ThemedText>
+        </TouchableOpacity>
       </ThemedView>
 
       <ThemedView lightColor="#ffffff" darkColor="#0F1618" style={styles.searchCard}>
@@ -131,6 +139,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     opacity: 0.85,
+  },
+  featureButton: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 2,
+    gap: 4,
+  },
+  featureButtonSub: {
+    color: '#E0F2FE',
+    opacity: 0.95,
+    fontWeight: '700',
+    fontSize: 13,
   },
   searchCard: {
     borderRadius: 12,
