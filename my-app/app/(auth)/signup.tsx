@@ -26,7 +26,7 @@ export default function SignUpScreen() {
           </Text>
         </View>
 
-        <Link href="/auth/login" asChild>
+        <Link href="/login" asChild>
           <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} activeOpacity={0.9}>
             <Text style={styles.buttonText}>Go to Login</Text>
           </TouchableOpacity>

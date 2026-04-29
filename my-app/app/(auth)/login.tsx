@@ -14,8 +14,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const GREEN = '#16A34A';
-  const BG = '#179B4B';
+  const GREEN = '#0A84FF';
+  const BG = '#D9F2FF';
   const INPUT_BORDER = '#D1D5DB';
   const PLACEHOLDER = '#9CA3AF';
 
@@ -30,11 +30,11 @@ export default function LoginScreen() {
 
     const ok = await signInStep1(username, password);
     if (!ok) {
-      setError('Please enter a student email for both fields (and they must match).');
+      setError('Invalid login. Use username: student and password: unilease123');
       return;
     }
-
-    router.replace('/auth/login2');
+    // Keep auth simple for demo: one-step sign in.
+    router.replace('/');
   };
 
   return (
@@ -43,13 +43,17 @@ export default function LoginScreen() {
         contentContainerStyle={[styles.container, { backgroundColor: BG }]}
         scrollEnabled={false}
       >
+        <View style={styles.bgBlobA} />
+        <View style={styles.bgBlobB} />
+        <View style={styles.bgBlobC} />
+
         <View style={styles.card}>
           <View style={[styles.logoCircle, { backgroundColor: `${GREEN}22` }]}>
-            <MaterialIcons name="receipt" size={44} color={GREEN} />
+            <MaterialIcons name="school" size={44} color={GREEN} />
           </View>
 
-          <Text style={styles.brandTitle}>JuiceOps BI</Text>
-          <Text style={styles.brandSubtitle}>Top Juice Parramatta</Text>
+          <Text style={styles.brandTitle}>UniLease</Text>
+          <Text style={styles.brandSubtitle}>Student Marketplace</Text>
 
           <View style={styles.formSection}>
             <View style={styles.inputGroup}>
@@ -58,7 +62,7 @@ export default function LoginScreen() {
                 <MaterialIcons name="person" size={20} color={GREEN} />
                 <TextInput
                   style={styles.input}
-                  placeholder="your.name@university.edu"
+                  placeholder="student"
                   placeholderTextColor={PLACEHOLDER}
                   value={username}
                   onChangeText={(text) => {
@@ -78,7 +82,7 @@ export default function LoginScreen() {
                 <MaterialIcons name="lock" size={20} color={GREEN} />
                 <TextInput
                   style={styles.input}
-                  placeholder="your.name@university.edu"
+                  placeholder="unilease123"
                   placeholderTextColor={PLACEHOLDER}
                   value={password}
                   onChangeText={(text) => {
@@ -111,7 +115,7 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            <Text style={styles.footerText}>Use your student email for both fields.</Text>
+            <Text style={styles.footerText}>Demo login: student / unilease123</Text>
           </View>
         </View>
       </ScrollView>
@@ -126,11 +130,43 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  bgBlobA: {
+    position: 'absolute',
+    width: 260,
+    height: 260,
+    borderRadius: 999,
+    backgroundColor: '#BDE4F5',
+    top: 20,
+    left: -80,
+  },
+  bgBlobB: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 999,
+    backgroundColor: '#8FD3EA',
+    bottom: 80,
+    right: -70,
+    opacity: 0.85,
+  },
+  bgBlobC: {
+    position: 'absolute',
+    width: 320,
+    height: 120,
+    borderRadius: 120,
+    backgroundColor: '#EAF9FF',
+    bottom: -10,
+    left: -20,
+    transform: [{ rotate: '-12deg' }],
   },
   card: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFFE8',
+    borderWidth: 1,
+    borderColor: '#FFFFFFB2',
     borderRadius: 18,
     padding: 26,
     alignItems: 'center',
@@ -156,9 +192,9 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   brandSubtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#64748B',
     marginBottom: 18,
   },
   formSection: {

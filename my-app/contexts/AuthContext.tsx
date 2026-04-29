@@ -3,6 +3,9 @@ import { createContext, useContext, useMemo, useState } from 'react';
 
 export type UniLeaseUser = { uid: string; username: string };
 
+const DEMO_USERNAME = 'student';
+const DEMO_PASSWORD = 'unilease123';
+
 type AuthContextValue = {
   user: UniLeaseUser | null;
   loading: boolean;
@@ -20,13 +23,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [step1Email, setStep1Email] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const isValidEmail = (v: string) => {
-    const s = v.trim().toLowerCase();
-    if (!s) return false;
-    // Basic email shape check
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-  };
-
   const normalize = (v: string) => v.trim();
 
   const value = useMemo<AuthContextValue>(() => {
@@ -39,7 +35,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           const u = normalize(username);
           const p = normalize(password);
-          const ok = isValidEmail(u) && isValidEmail(p) && u === p;
+          // Demo login: keep credentials simple and require username/password to be different.
+          const ok = u === DEMO_USERNAME && p === DEMO_PASSWORD && u !== p;
           if (!ok) return false;
           setStep1Done(true);
           setStep1Email(u);
@@ -54,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (!step1Done) return false;
           const u = normalize(username);
           const p = normalize(password);
-          const ok = isValidEmail(u) && isValidEmail(p) && u === p && step1Email != null && u === step1Email;
+          const ok = u === DEMO_USERNAME && p === DEMO_PASSWORD && u !== p && step1Email != null && u === step1Email;
           if (!ok) return false;
           setUser({ uid: u, username: u });
           return true;
