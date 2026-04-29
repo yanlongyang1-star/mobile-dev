@@ -37,6 +37,18 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="chevron.right" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="create-listing"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="consignment-rental"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

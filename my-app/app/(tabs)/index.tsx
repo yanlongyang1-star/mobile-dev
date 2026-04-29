@@ -33,19 +33,25 @@ export default function BrowseScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#E8F6F9', dark: '#123033' }}
-      headerImage={<Image source={require('@/assets/images/partial-react-logo.png')} style={styles.headerImage} />}
+      headerBackgroundColor={{ light: '#D9F2FF', dark: '#123033' }}
+      headerImage={
+        <View style={styles.headerDecor}>
+          <View style={styles.headerBlobLarge} />
+          <View style={styles.headerBlobSmall} />
+          <View style={styles.headerRibbon} />
+        </View>
+      }
     >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">UniLease</ThemedText>
-        <ThemedText style={styles.subtitle}>Browse items near campus</ThemedText>
+        <ThemedText type="title" style={styles.brandTitle}>UniLease</ThemedText>
+        <ThemedText style={styles.subtitle}>Campus marketplace made simple</ThemedText>
         <TouchableOpacity
           style={[styles.featureButton, { backgroundColor: buttonBg }]}
-          onPress={() => router.push('/consignment-rental')}
+          onPress={() => router.push('/create-listing')}
           activeOpacity={0.95}
         >
-          <ThemedText style={{ color: '#fff', fontWeight: '900' }}>Consignment & Rental</ThemedText>
-          <ThemedText style={styles.featureButtonSub}>List or rent in a guided flow</ThemedText>
+          <ThemedText style={{ color: '#fff', fontWeight: '900' }}>List Your Item</ThemedText>
+          <ThemedText style={styles.featureButtonSub}>Rental or consignment in one simple flow</ThemedText>
         </TouchableOpacity>
       </ThemedView>
 
@@ -123,22 +129,56 @@ export default function BrowseScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    height: 160,
-    width: 260,
-    bottom: 0,
-    left: 0,
+  headerDecor: {
+    flex: 1,
+  },
+  headerBlobLarge: {
     position: 'absolute',
-    opacity: 0.2,
+    width: 240,
+    height: 240,
+    borderRadius: 999,
+    backgroundColor: '#BDE4F5',
+    left: -30,
+    top: 16,
+  },
+  headerBlobSmall: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: '#9FD3EA',
+    right: 12,
+    top: 30,
+    opacity: 0.9,
+  },
+  headerRibbon: {
+    position: 'absolute',
+    width: 320,
+    height: 110,
+    borderRadius: 100,
+    backgroundColor: '#E9F9FF',
+    right: -40,
+    bottom: -16,
+    transform: [{ rotate: '-8deg' }],
   },
   titleContainer: {
-    gap: 8,
+    gap: 6,
     marginBottom: 12,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF88',
+    borderWidth: 1,
+    borderColor: '#FFFFFFA6',
+    padding: 14,
+  },
+  brandTitle: {
+    fontSize: 36,
+    lineHeight: 36,
+    letterSpacing: 0.2,
   },
   subtitle: {
     fontSize: 14,
-    fontWeight: '600',
-    opacity: 0.85,
+    fontWeight: '700',
+    opacity: 0.75,
   },
   featureButton: {
     borderRadius: 12,
