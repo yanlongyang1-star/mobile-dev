@@ -4,18 +4,23 @@ import { ActivityIndicator } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
   const { signInStep1, loading: authLoading } = useAuth();
   const router = useRouter();
 
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const GREEN = '#0A84FF';
-  const BG = '#D9F2FF';
+  const GREEN = '#16A34A';
+  const BG = '#179B4B';
   const INPUT_BORDER = '#D1D5DB';
   const PLACEHOLDER = '#9CA3AF';
 
@@ -40,29 +45,30 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
       <ScrollView
-        contentContainerStyle={[styles.container, { backgroundColor: BG }]}
+        contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
         scrollEnabled={false}
       >
-        <View style={styles.bgBlobA} />
-        <View style={styles.bgBlobB} />
-        <View style={styles.bgBlobC} />
-
         <View style={styles.card}>
           <View style={[styles.logoCircle, { backgroundColor: `${GREEN}22` }]}>
-            <MaterialIcons name="school" size={44} color={GREEN} />
+            <MaterialIcons name="receipt" size={44} color={GREEN} />
           </View>
 
-          <Text style={styles.brandTitle}>UniLease</Text>
-          <Text style={styles.brandSubtitle}>Student Marketplace</Text>
+          <Text style={styles.brandTitle}>JuiceOps BI</Text>
+          <Text style={styles.brandSubtitle}>Top Juice Parramatta</Text>
 
           <View style={styles.formSection}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Username</Text>
-              <View style={[styles.inputContainer, { borderColor: INPUT_BORDER }]}>
-                <MaterialIcons name="person" size={20} color={GREEN} />
+              <Text style={[styles.label, { color: colors.secondary }]}>Username</Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  { borderColor: INPUT_BORDER, backgroundColor: colors.surface },
+                ]}
+              >
+                <MaterialIcons name="person" size={20} color={colors.primary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="student"
+                  placeholder="your.name@university.edu"
                   placeholderTextColor={PLACEHOLDER}
                   value={username}
                   onChangeText={(text) => {
@@ -77,12 +83,17 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={[styles.inputContainer, { borderColor: INPUT_BORDER }]}>
-                <MaterialIcons name="lock" size={20} color={GREEN} />
+              <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  { borderColor: INPUT_BORDER, backgroundColor: colors.surface },
+                ]}
+              >
+                <MaterialIcons name="lock" size={20} color={colors.primary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="unilease123"
+                  placeholder="your.name@university.edu"
                   placeholderTextColor={PLACEHOLDER}
                   value={password}
                   onChangeText={(text) => {
@@ -103,7 +114,7 @@ export default function LoginScreen() {
             ) : null}
 
             <TouchableOpacity
-              style={[styles.signInButton, { backgroundColor: GREEN }]}
+              style={[styles.signInButton, { backgroundColor: colors.primary }]}
               onPress={onLogin}
               disabled={authLoading}
               activeOpacity={0.9}
@@ -115,7 +126,7 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            <Text style={styles.footerText}>Demo login: student / unilease123</Text>
+            <Text style={styles.footerText}>Use your student email for both fields.</Text>
           </View>
         </View>
       </ScrollView>
