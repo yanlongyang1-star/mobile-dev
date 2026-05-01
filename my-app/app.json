@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "UniLease needs access to your photo library so you can attach a listing image."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,6 +30,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "UniLease needs access to your photos to attach a listing image.",
+          "cameraPermission": "UniLease can use the camera if you choose to take a new listing photo."
+        }
+      ],
       [
         "expo-splash-screen",
         {

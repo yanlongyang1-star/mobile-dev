@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 type State = { hasError: boolean; error?: Error };
 
-export default class ErrorBoundary extends React.Component<{}, State> {
+export default class ErrorBoundary extends React.Component<React.PropsWithChildren<object>, State> {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false };
@@ -14,7 +14,6 @@ export default class ErrorBoundary extends React.Component<{}, State> {
   }
 
   componentDidCatch(error: Error) {
-    // eslint-disable-next-line no-console
     console.error('Unhandled error caught by ErrorBoundary', error);
     this.setState({ error });
   }

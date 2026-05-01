@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-paper';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -9,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { CAMPUS_HANDOVER_ZONES } from '@/data/mock-unilease';
 import type { UniLeaseCategory, UniLeaseItem } from '@/data/mock-unilease';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { moderateText } from '@/utils/profanityFilter';
 
 type ListingMode = 'rental' | 'consignment';
 type AvailabilityStatus = 'Available now' | 'Limited this week' | 'Available next week';
@@ -137,10 +139,10 @@ export default function CreateListingScreen() {
   const [mode, setMode] = useState<ListingMode>('rental');
 
   const [itemTitle, setItemTitle] = useState('MacBook Air M1');
+  const [description, setDescription] = useState('');
   const [category, setCategory] = useState<UniLeaseCategory>('Laptops');
   const [condition, setCondition] = useState<UniLeaseItem['condition']>('Good');
   const [campusLocation, setCampusLocation] = useState<string>(CAMPUS_HANDOVER_ZONES[0]);
-  const [photoAdded, setPhotoAdded] = useState(false);
 
   const [dailyPrice, setDailyPrice] = useState('15');
   const [deposit, setDeposit] = useState('80');
@@ -154,6 +156,7 @@ export default function CreateListingScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [listingPhotoUri, setListingPhotoUri] = useState<string | null>(null);
 
   const submitLabel = mode === 'rental' ? 'Publish Rental Listing' : 'Submit Consignment Request';
 
@@ -165,10 +168,10 @@ export default function CreateListingScreen() {
   const validate = () => {
     const next: Record<string, string> = {};
     if (!itemTitle.trim()) next.itemTitle = 'Item title is required.';
+    if (!description.trim()) next.description = 'Description is required.';
     if (!category) next.category = 'Choose a category.';
     if (!condition) next.condition = 'Choose item condition.';
     if (!campusLocation) next.campusLocation = 'Choose campus location.';
-    if (!photoAdded) next.photo = 'Tap photo placeholder to simulate upload.';
 
     if (mode === 'rental') {
       if (!positiveNumber(dailyPrice)) next.dailyPrice = 'Enter valid daily price.';
@@ -193,8 +196,48 @@ export default function CreateListingScreen() {
       setSubmitError('Please complete required fields before submitting.');
       return;
     }
+
+    const titleModeration = moderateText(itemTitle);
+    const descriptionModeration = moderateText(description);
+    if (titleModeration.hasProfanity || descriptionModeration.hasProfanity) {
+      const flagged = [...titleModeration.flaggedWords, ...descriptionModeration.flaggedWords];
+      setSubmitError(`Please remove profanity before submitting. Flagged words: ${[...new Set(flagged)].join(', ')}`);
+      setErrors({
+        itemTitle: titleModeration.hasProfanity ? `Try this: "${titleModeration.maskedText}"` : '',
+        description: descriptionModeration.hasProfanity ? `Try this: "${descriptionModeration.maskedText}"` : '',
+      });
+      return;
+    }
+
     setSubmitted(true);
   };
+
+  const pickListingPhoto = async () => {
+    setSubmitError('');
+    try {
+      if (Platform.OS === 'web') {
+        setSubmitError('Photo picking is limited on web in this demo; use iOS or Android for the full flow.');
+        return;
+      }
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Permission needed', 'Allow photo library access to attach a listing image.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setListingPhotoUri(result.assets[0].uri);
+      }
+    } catch {
+      Alert.alert('Could not open picker', 'Please try again.');
+    }
+  };
+
+  const photoSource = listingPhotoUri ? { uri: listingPhotoUri } : require('@/assets/images/favicon.png');
+  const photoReady = listingPhotoUri != null;
 
   return (
     <ParallaxScrollView
@@ -252,6 +295,19 @@ export default function CreateListingScreen() {
           </View>
 
           <View style={styles.field}>
+            <ThemedText style={styles.label}>Description</ThemedText>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={4}
+              style={[styles.input, styles.textArea, errors.description ? styles.inputError : null]}
+              placeholder="Describe condition, usage, pickup details..."
+            />
+            <FieldError text={errors.description} />
+          </View>
+
+          <View style={styles.field}>
             <ThemedText style={styles.label}>Category</ThemedText>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
               {CATEGORY_OPTIONS.map((opt) => (
@@ -282,15 +338,14 @@ export default function CreateListingScreen() {
           </View>
 
           <View>
-            <ThemedText style={styles.label}>Photo placeholder</ThemedText>
-            <TouchableOpacity style={[styles.photoBox, errors.photo ? styles.inputError : null]} onPress={() => setPhotoAdded((s) => !s)}>
-              <Image source={photoAdded ? require('@/assets/images/react-logo.png') : require('@/assets/images/favicon.png')} style={styles.photo} />
+            <ThemedText style={styles.label}>Listing photo (optional)</ThemedText>
+            <TouchableOpacity style={styles.photoBox} onPress={pickListingPhoto}>
+              <Image source={photoSource} style={styles.photo} />
               <View style={{ flex: 1 }}>
-                <ThemedText type="defaultSemiBold">{photoAdded ? 'Photo added' : 'Tap to add photo'}</ThemedText>
-                <ThemedText style={styles.photoSub}>Demo placeholder for assessment video</ThemedText>
+                <ThemedText type="defaultSemiBold">{photoReady ? 'Photo selected' : 'Add from gallery'}</ThemedText>
+                <ThemedText style={styles.photoSub}>Skip this or tap to pick an image from your library.</ThemedText>
               </View>
             </TouchableOpacity>
-            <FieldError text={errors.photo} />
           </View>
         </ThemedView>
 
@@ -498,6 +553,11 @@ const styles = StyleSheet.create({
     borderColor: '#CBD5E1',
     backgroundColor: '#FFFFFFB3',
     paddingHorizontal: 10,
+  },
+  textArea: {
+    minHeight: 92,
+    textAlignVertical: 'top',
+    paddingTop: 10,
   },
   inputError: { borderColor: '#EF4444' },
   chipRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', paddingVertical: 2 },

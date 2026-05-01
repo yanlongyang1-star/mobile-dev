@@ -35,8 +35,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           const u = normalize(username);
           const p = normalize(password);
-          // Demo login: keep credentials simple and require username/password to be different.
-          const ok = u === DEMO_USERNAME && p === DEMO_PASSWORD && u !== p;
+          // Demo login — fixed demo credentials only.
+          const ok = u === DEMO_USERNAME && p === DEMO_PASSWORD;
           if (!ok) return false;
           setStep1Done(true);
           setStep1Email(u);
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (!step1Done) return false;
           const u = normalize(username);
           const p = normalize(password);
-          const ok = u === DEMO_USERNAME && p === DEMO_PASSWORD && u !== p && step1Email != null && u === step1Email;
+          const ok = u === DEMO_USERNAME && p === DEMO_PASSWORD && step1Email != null && u === step1Email;
           if (!ok) return false;
           setUser({ uid: u, username: u });
           return true;
