@@ -1,223 +1,301 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Keyboard, KeyboardAvoidingView, Platform, Text, TextInput } from 'react-native';
-import { ActivityIndicator } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
 
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 
+const PRIMARY_BLUE = '#2563EB';
+const PAGE_BG = '#EFF6FF';
+const ICON_RING_BG = '#DBEAFE';
+const INPUT_BORDER = '#E2E8F0';
+const SUBTEXT = '#64748B';
+
 export default function LoginScreen() {
-  const { signInStep1, loading: authLoading } = useAuth();
   const router = useRouter();
+  const {
+    completeSignIn,
+    loading: authLoading,
+    biometricCaps,
+    biometricUnlockSaved,
+    refreshBiometricCaps,
+    attemptQuickBiometricSignIn,
+  } = useAuth();
 
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('student');
+  const [password, setPassword] = useState('unilease123');
   const [error, setError] = useState('');
+  const [bioBusy, setBioBusy] = useState(false);
 
-  const GREEN = '#16A34A';
-  const BG = '#179B4B';
-  const INPUT_BORDER = '#D1D5DB';
-  const PLACEHOLDER = '#9CA3AF';
+  useFocusEffect(
+    useCallback(() => {
+      void refreshBiometricCaps();
+    }, [refreshBiometricCaps])
+  );
+
+  const showBiometricShortcut =
+    Platform.OS !== 'web' &&
+    biometricUnlockSaved &&
+    !!(biometricCaps?.hardwareAvailable && biometricCaps?.enrolled);
+
+  const bioLabel =
+    biometricCaps?.labels?.length === 1
+      ? biometricCaps.labels[0]
+      : biometricCaps?.labels?.length
+        ? biometricCaps.labels.join(' · ')
+        : 'Biometric';
 
   const onLogin = async () => {
-    if (!username || !password) {
-      setError('Please fill in all fields');
+    if (!username.trim() || !password) {
+      setError('Please fill in all fields.');
       return;
     }
 
     setError('');
     Keyboard.dismiss();
 
-    const ok = await signInStep1(username, password);
-    if (!ok) {
+    const outcome = await completeSignIn(username.trim(), password);
+    if (outcome === 'invalid_credentials') {
       setError('Invalid login. Use username: student and password: unilease123');
       return;
     }
-    // Keep auth simple for demo: one-step sign in.
+    if (outcome === 'biometric_canceled') {
+      setError(
+        'Sign-in canceled. Tap Sign In again and complete Face ID, Touch ID, fingerprint, or your device passcode when the system prompts you.'
+      );
+      return;
+    }
     router.replace('/');
+  };
+
+  const onBiometricLogin = async () => {
+    setError('');
+    Keyboard.dismiss();
+    setBioBusy(true);
+    try {
+      const ok = await attemptQuickBiometricSignIn();
+      if (!ok) {
+        setError('Biometric sign-in failed. Use username and password, or enable biometrics in Profile.');
+      } else {
+        router.replace('/');
+      }
+    } finally {
+      setBioBusy(false);
+    }
   };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-      <ScrollView
-        contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
-        scrollEnabled={false}
-      >
-        <View style={styles.card}>
-          <View style={[styles.logoCircle, { backgroundColor: `${GREEN}22` }]}>
-            <MaterialIcons name="receipt" size={44} color={GREEN} />
-          </View>
+      <View style={styles.page}>
+        <View pointerEvents="none" style={[styles.bgBlob, styles.bgBlobA]} />
+        <View pointerEvents="none" style={[styles.bgBlob, styles.bgBlobB]} />
+        <View pointerEvents="none" style={[styles.bgBlob, styles.bgBlobC]} />
 
-          <Text style={styles.brandTitle}>JuiceOps BI</Text>
-          <Text style={styles.brandSubtitle}>Top Juice Parramatta</Text>
-
-          <View style={styles.formSection}>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Username</Text>
-              <View
-                style={[
-                  styles.inputContainer,
-                  { borderColor: INPUT_BORDER, backgroundColor: colors.surface },
-                ]}
-              >
-                <MaterialIcons name="person" size={20} color={colors.primary} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="your.name@university.edu"
-                  placeholderTextColor={PLACEHOLDER}
-                  value={username}
-                  onChangeText={(text) => {
-                    setUsername(text);
-                    setError('');
-                  }}
-                  autoCapitalize="none"
-                  editable={!authLoading}
-                  underlineColorAndroid="transparent"
-                />
-              </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.card}>
+            <View style={[styles.logoCircle, { backgroundColor: ICON_RING_BG }]}>
+              <MaterialIcons name="school" size={42} color={PRIMARY_BLUE} />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
-              <View
-                style={[
-                  styles.inputContainer,
-                  { borderColor: INPUT_BORDER, backgroundColor: colors.surface },
-                ]}
-              >
-                <MaterialIcons name="lock" size={20} color={colors.primary} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="your.name@university.edu"
-                  placeholderTextColor={PLACEHOLDER}
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    setError('');
-                  }}
-                  secureTextEntry
-                  editable={!authLoading}
-                  underlineColorAndroid="transparent"
-                />
+            <Text style={styles.brandTitle}>UniLease</Text>
+            <Text style={styles.brandSubtitle}>Student Marketplace</Text>
+
+            <View style={styles.formSection}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Username</Text>
+                <View style={[styles.inputContainer, { borderColor: INPUT_BORDER }]}>
+                  <MaterialIcons name="person" size={20} color={PRIMARY_BLUE} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="student"
+                    placeholderTextColor="#94A3B8"
+                    value={username}
+                    onChangeText={(text) => {
+                      setUsername(text);
+                      setError('');
+                    }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!authLoading}
+                    underlineColorAndroid="transparent"
+                  />
+                </View>
               </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={[styles.inputContainer, { borderColor: INPUT_BORDER }]}>
+                  <MaterialIcons name="lock-outline" size={20} color={PRIMARY_BLUE} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="unilease123"
+                    placeholderTextColor="#94A3B8"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setError('');
+                    }}
+                    secureTextEntry
+                    editable={!authLoading}
+                    underlineColorAndroid="transparent"
+                  />
+                </View>
+              </View>
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                style={[styles.signInButton, { backgroundColor: PRIMARY_BLUE }]}
+                onPress={() => void onLogin()}
+                disabled={authLoading}
+                activeOpacity={0.92}>
+                {authLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.signInButtonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+
+              {showBiometricShortcut ? (
+                <TouchableOpacity
+                  style={styles.bioRow}
+                  onPress={() => void onBiometricLogin()}
+                  disabled={authLoading || bioBusy}
+                  activeOpacity={0.85}>
+                  <MaterialIcons name="fingerprint" size={26} color={PRIMARY_BLUE} />
+                  <Text style={styles.bioRowText}>Sign in with {bioLabel}</Text>
+                  {bioBusy ? (
+                    <ActivityIndicator size="small" color={PRIMARY_BLUE} />
+                  ) : (
+                    <MaterialIcons name="chevron-right" size={22} color={SUBTEXT} />
+                  )}
+                </TouchableOpacity>
+              ) : null}
+
+              <Text style={styles.footerText}>
+                Demo login: student / unilease123.
+                {Platform.OS !== 'web'
+                  ? ' On devices with Face ID, Touch ID, or fingerprint set up in Settings, UniLease confirms with an Apple/Google security prompt before signing you in.'
+                  : ''}
+              </Text>
             </View>
-
-            {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>⚠️ {error}</Text>
-              </View>
-            ) : null}
-
-            <TouchableOpacity
-              style={[styles.signInButton, { backgroundColor: colors.primary }]}
-              onPress={onLogin}
-              disabled={authLoading}
-              activeOpacity={0.9}
-            >
-              {authLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.signInButtonText}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-
-            <Text style={styles.footerText}>Use your student email for both fields.</Text>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: {
+  page: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: PAGE_BG,
     overflow: 'hidden',
   },
-  bgBlobA: {
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bgBlob: {
     position: 'absolute',
-    width: 260,
-    height: 260,
+    opacity: 0.55,
+  },
+  bgBlobA: {
+    width: 280,
+    height: 280,
     borderRadius: 999,
-    backgroundColor: '#BDE4F5',
-    top: 20,
-    left: -80,
+    backgroundColor: '#BFDBFE',
+    top: -40,
+    left: -100,
   },
   bgBlobB: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
+    width: 240,
+    height: 240,
     borderRadius: 999,
-    backgroundColor: '#8FD3EA',
-    bottom: 80,
-    right: -70,
-    opacity: 0.85,
+    backgroundColor: '#93C5FD',
+    bottom: 60,
+    right: -80,
   },
   bgBlobC: {
-    position: 'absolute',
-    width: 320,
-    height: 120,
-    borderRadius: 120,
-    backgroundColor: '#EAF9FF',
-    bottom: -10,
-    left: -20,
-    transform: [{ rotate: '-12deg' }],
+    width: 340,
+    height: 140,
+    borderRadius: 140,
+    backgroundColor: '#E0F2FE',
+    bottom: -40,
+    left: -36,
+    transform: [{ rotate: '-14deg' }],
   },
   card: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#FFFFFFE8',
-    borderWidth: 1,
-    borderColor: '#FFFFFFB2',
-    borderRadius: 18,
-    padding: 26,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 26,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowColor: '#1E293B',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 86,
+    height: 86,
+    borderRadius: 43,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   brandTitle: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '800',
-    marginTop: 2,
-    marginBottom: 4,
-    color: '#111827',
+    letterSpacing: -0.5,
+    color: '#0F172A',
   },
   brandSubtitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#64748B',
-    marginBottom: 18,
+    fontSize: 15,
+    fontWeight: '600',
+    color: SUBTEXT,
+    marginTop: 4,
+    marginBottom: 22,
   },
   formSection: {
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#6B7280',
+    fontWeight: '600',
+    color: SUBTEXT,
     marginBottom: 8,
     paddingLeft: 2,
   },
@@ -225,47 +303,67 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 54,
-    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 52,
+    backgroundColor: '#FFFFFF',
   },
   input: {
     flex: 1,
     fontSize: 16,
-    paddingLeft: 10,
-    color: '#111827',
+    paddingLeft: 12,
+    color: '#0F172A',
   },
   errorBox: {
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 12,
-    marginBottom: 16,
-    backgroundColor: '#FEE2E2',
+    marginBottom: 14,
+    backgroundColor: '#FEF2F2',
     width: '100%',
+    borderWidth: 1,
+    borderColor: '#FECACA',
   },
   errorText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#DC2626',
   },
   signInButton: {
-    height: 56,
-    borderRadius: 12,
+    height: 54,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 6,
-    marginBottom: 18,
+    marginTop: 4,
     width: '100%',
   },
   signInButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '900',
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  bioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 14,
+    marginBottom: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    gap: 10,
+    borderRadius: 12,
+  },
+  bioRowText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1E293B',
   },
   footerText: {
     textAlign: 'center',
     fontSize: 13,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontWeight: '500',
+    color: '#94A3B8',
+    marginTop: 16,
+    lineHeight: 18,
   },
 });
