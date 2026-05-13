@@ -9,39 +9,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useUniLease } from '@/contexts/UniLeaseContext';
 import { CAMPUS_HANDOVER_ZONES } from '@/data/mock-unilease';
-
-function ymdToday() {
-  const dt = new Date();
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const d = String(dt.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function addDays(ymd: string, days: number) {
-  const [y, m, d] = ymd.split('-').map((v) => Number(v));
-  const base = new Date(y, m - 1, d);
-  base.setDate(base.getDate() + days);
-  const yy = base.getFullYear();
-  const mm = String(base.getMonth() + 1).padStart(2, '0');
-  const dd = String(base.getDate()).padStart(2, '0');
-  return `${yy}-${mm}-${dd}`;
-}
-
-function parseYmd(ymd: string) {
-  const [y, m, d] = ymd.split('-').map((v) => Number(v));
-  if (!y || !m || !d) return null;
-  return new Date(Date.UTC(y, m - 1, d));
-}
-
-function daysInclusive(startYmd: string, endYmd: string) {
-  const start = parseYmd(startYmd);
-  const end = parseYmd(endYmd);
-  if (!start || !end) return 1;
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const diff = (end.getTime() - start.getTime()) / msPerDay;
-  return Math.max(1, Math.floor(diff) + 1);
-}
+import { addDays, ymdToday } from '@/utils/date';
+import { calculateBookingQuote, validateBookingDates } from '@/utils/booking';
 
 export default function BookingRequestScreen() {
   const router = useRouter();
@@ -56,10 +25,7 @@ export default function BookingRequestScreen() {
 
   const preview = useMemo(() => {
     if (!selectedItem) return null;
-    const days = daysInclusive(startDate, endDate);
-    const bookingFee = selectedItem.pricePerDay * days;
-    const deposit = Math.round(bookingFee * 0.33 * 100) / 100;
-    return { days, bookingFee, deposit };
+    return calculateBookingQuote(selectedItem, startDate, endDate);
   }, [endDate, selectedItem, startDate]);
 
   const onSubmit = async () => {
@@ -71,6 +37,12 @@ export default function BookingRequestScreen() {
 
     if (!startDate || !endDate) {
       setError('Please enter start/end dates.');
+      return;
+    }
+
+    const dateValidation = validateBookingDates(startDate, endDate);
+    if (!dateValidation.ok) {
+      setError(dateValidation.reason ?? 'Please check your booking dates.');
       return;
     }
 

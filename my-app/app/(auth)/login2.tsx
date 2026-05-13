@@ -9,7 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login2Screen() {
-  const { signInStep2, step1Done, loading: authLoading } = useAuth();
+  const { signInStep2, step1Done, loading: authLoading, authMode } = useAuth();
   const router = useRouter();
 
   const colorScheme = useColorScheme();
@@ -36,7 +36,11 @@ export default function Login2Screen() {
     Keyboard.dismiss();
     const ok = await signInStep2(username, password);
     if (!ok) {
-      setError('Invalid login. Use username: student and password: unilease123');
+      setError(
+        authMode === 'firebase'
+          ? 'Firebase sign in failed. Check email, password, and allowed university domain.'
+          : 'Invalid login. Use username: student and password: unilease123'
+      );
       return;
     }
     router.replace('/');
@@ -108,7 +112,9 @@ export default function Login2Screen() {
               {authLoading ? <ActivityIndicator color="white" /> : <Text style={styles.signInButtonText}>Sign In</Text>}
             </TouchableOpacity>
 
-            <Text style={[styles.footerText, { color: colors.secondary }]}>Username 和 Password 都用同一个学生邮箱。</Text>
+            <Text style={[styles.footerText, { color: colors.secondary }]}>
+              {authMode === 'firebase' ? 'Complete Firebase sign in with the same university email.' : 'Demo: repeat student / unilease123.'}
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -251,4 +257,3 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 });
-

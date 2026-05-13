@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { CAMPUS_HANDOVER_ZONES, MOCK_ITEMS, type UniLeaseItem } from '@/data/mock-unilease';
 import { useAuth } from '@/contexts/AuthContext';
+import { calculateBookingQuote } from '@/utils/booking';
+import {
+  fetchBookingsFromFirestore,
+  fetchListingsFromFirestore,
+  saveBookingToFirestore,
+  saveListingToFirestore,
+  saveRatingToFirestore,
+  updateBookingStatusInFirestore,
+} from '@/services/firestore';
+import { loadBookingsForUser, saveBookingsForUser } from '@/services/localDatabase';
 
 export type UniLeaseBookingStatus = 'pending' | 'approved' | 'picked_up' | 'returned';
 export type UniLeasePaymentMethod = 'Card' | 'Cash' | 'Transfer';
@@ -32,6 +42,14 @@ type UniLeaseContextValue = {
   selectedItemId: string | null;
   selectedItem: UniLeaseItem | null;
   selectItemForBooking: (itemId: string) => void;
+  addListing: (params: {
+    title: string;
+    category: UniLeaseItem['categories'][number];
+    condition: UniLeaseItem['condition'];
+    campusLocation: string;
+    pricePerDay: number;
+    description?: string;
+  }) => Promise<UniLeaseItem | null>;
 
   bookings: UniLeaseBooking[];
   myBookings: UniLeaseBooking[];
@@ -50,33 +68,21 @@ type UniLeaseContextValue = {
 
 const UniLeaseContext = createContext<UniLeaseContextValue | undefined>(undefined);
 
-function parseYmd(ymd: string) {
-  // Accept "YYYY-MM-DD"
-  const [y, m, d] = ymd.split('-').map((v) => Number(v));
-  if (!y || !m || !d) return null;
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  if (Number.isNaN(dt.getTime())) return null;
-  return dt;
-}
-
-function diffDaysInclusive(startYmd: string, endYmd: string) {
-  const start = parseYmd(startYmd);
-  const end = parseYmd(endYmd);
-  if (!start || !end) return 1;
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const raw = (end.getTime() - start.getTime()) / msPerDay;
-  const days = Math.floor(raw) + 1;
-  return Math.max(1, days);
-}
-
 export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const meUid = user?.uid ?? null;
 
-  const items = useMemo(() => MOCK_ITEMS, []);
+  const [remoteItems, setRemoteItems] = useState<UniLeaseItem[]>([]);
+  const items = useMemo(() => {
+    const map = new Map<string, UniLeaseItem>();
+    for (const item of MOCK_ITEMS) map.set(item.id, item);
+    for (const item of remoteItems) map.set(item.id, item);
+    return Array.from(map.values());
+  }, [remoteItems]);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const [bookings, setBookings] = useState<UniLeaseBooking[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
 
   const selectedItem = useMemo(() => {
     if (!selectedItemId) return null;
@@ -89,43 +95,93 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
   }, [bookings, meUid]);
 
   useEffect(() => {
-    // Seed a small set of bookings for the demo user.
-    if (!meUid) return;
-    if (bookings.length) return;
-    setBookings([
-      {
-        id: 'seed-1',
-        itemId: 'graphing-calculator',
-        borrowerUid: meUid,
-        ownerUid: 'owner-2',
-        startDate: '2026-05-01',
-        endDate: '2026-05-02',
-        meetupLocation: CAMPUS_HANDOVER_ZONES[1],
-        meetupTime: '12:00',
-        status: 'returned',
-        bookingFee: 10,
-        deposit: 5,
-        paymentMethod: 'Card',
-        createdAt: Date.now() - 1000 * 60 * 60 * 26,
-        rating: { score: 5, comment: 'Works great and on time pickup.' },
-      },
-      {
-        id: 'seed-2',
-        itemId: 'laptop',
-        borrowerUid: meUid,
-        ownerUid: 'owner-6',
-        startDate: '2026-05-10',
-        endDate: '2026-05-12',
-        meetupLocation: CAMPUS_HANDOVER_ZONES[0],
-        meetupTime: '15:30',
-        status: 'pending',
-        bookingFee: 90,
-        deposit: 30,
-        paymentMethod: 'Transfer',
-        createdAt: Date.now() - 1000 * 60 * 60 * 4,
-      },
-    ]);
-  }, [bookings.length, meUid]);
+    let active = true;
+
+    async function hydrateBookings() {
+      setStorageReady(false);
+      if (!meUid) {
+        setBookings([]);
+        setStorageReady(true);
+        return;
+      }
+
+      const [localBookings, remoteBookings] = await Promise.all([
+        loadBookingsForUser(meUid),
+        fetchBookingsFromFirestore(meUid),
+      ]);
+      if (!active) return;
+
+      if (remoteBookings.length) {
+        setBookings(remoteBookings);
+      } else if (localBookings.length) {
+        setBookings(localBookings);
+      } else {
+        setBookings([
+          {
+            id: 'seed-1',
+            itemId: 'graphing-calculator',
+            borrowerUid: meUid,
+            ownerUid: 'owner-2',
+            startDate: '2026-05-01',
+            endDate: '2026-05-02',
+            meetupLocation: CAMPUS_HANDOVER_ZONES[1],
+            meetupTime: '12:00',
+            status: 'returned',
+            bookingFee: 10,
+            deposit: 5,
+            paymentMethod: 'Card',
+            createdAt: Date.now() - 1000 * 60 * 60 * 26,
+            rating: { score: 5, comment: 'Works great and on time pickup.' },
+          },
+          {
+            id: 'seed-2',
+            itemId: 'laptop',
+            borrowerUid: meUid,
+            ownerUid: 'owner-6',
+            startDate: '2026-05-10',
+            endDate: '2026-05-12',
+            meetupLocation: CAMPUS_HANDOVER_ZONES[0],
+            meetupTime: '15:30',
+            status: 'pending',
+            bookingFee: 90,
+            deposit: 30,
+            paymentMethod: 'Transfer',
+            createdAt: Date.now() - 1000 * 60 * 60 * 4,
+          },
+        ]);
+      }
+      setStorageReady(true);
+    }
+
+    hydrateBookings().catch(() => {
+      if (active) setStorageReady(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [meUid]);
+
+  useEffect(() => {
+    let active = true;
+    fetchListingsFromFirestore()
+      .then((listings) => {
+        if (active) setRemoteItems(listings);
+      })
+      .catch(() => {
+        if (active) setRemoteItems([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!meUid || !storageReady) return;
+    saveBookingsForUser(meUid, bookings).catch(() => {
+      // Keep UI responsive even if local persistence fails.
+    });
+  }, [bookings, meUid, storageReady]);
 
   const value: UniLeaseContextValue = useMemo(() => {
     return {
@@ -133,6 +189,31 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
       selectedItemId,
       selectedItem,
       selectItemForBooking: (itemId: string) => setSelectedItemId(itemId),
+      addListing: async (params) => {
+        if (!meUid || !user) return null;
+        const id = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const item: UniLeaseItem = {
+          id,
+          title: params.title.trim(),
+          description:
+            params.description?.trim() ||
+            `${params.title.trim()} listed by a verified UniLease student for campus handover.`,
+          categories: [params.category],
+          pricePerDay: params.pricePerDay,
+          location: params.campusLocation,
+          condition: params.condition,
+          owner: {
+            uid: meUid,
+            name: user.username,
+            trustScore: 4.5,
+          },
+        };
+        setRemoteItems((prev) => [item, ...prev.filter((existing) => existing.id !== item.id)]);
+        saveListingToFirestore(item).catch(() => {
+          // The in-memory listing remains available for the current demo if Firestore is offline.
+        });
+        return item;
+      },
 
       bookings,
       myBookings,
@@ -140,9 +221,7 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
         if (!meUid) return null;
         if (!selectedItem) return null;
 
-        const days = diffDaysInclusive(params.startDate, params.endDate);
-        const bookingFee = selectedItem.pricePerDay * days;
-        const deposit = Math.round(bookingFee * 0.33 * 100) / 100;
+        const { bookingFee, deposit } = calculateBookingQuote(selectedItem, params.startDate, params.endDate);
 
         const booking: UniLeaseBooking = {
           id: `bk-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -161,6 +240,9 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
         };
 
         setBookings((prev) => [booking, ...prev]);
+        saveBookingToFirestore(booking).catch(() => {
+          // Firestore sync is best-effort; SQLite keeps the booking available offline.
+        });
         return booking;
       },
 
@@ -172,6 +254,9 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
             return { ...b, status: nextStatus };
           })
         );
+        updateBookingStatusInFirestore(bookingId, nextStatus).catch(() => {
+          // SQLite persistence still records the local state.
+        });
       },
 
       leaveRating: (bookingId: string, score: number, comment: string) => {
@@ -184,9 +269,12 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
             return { ...b, rating: { score: safeScore, comment: safeComment } };
           })
         );
+        saveRatingToFirestore(bookingId, { score: safeScore, comment: safeComment }).catch(() => {
+          // Best-effort remote sync.
+        });
       },
     };
-  }, [items, selectedItem, selectedItemId, bookings, myBookings, meUid]);
+  }, [items, selectedItem, selectedItemId, bookings, myBookings, meUid, user]);
 
   return <UniLeaseContext.Provider value={value}>{children}</UniLeaseContext.Provider>;
 }
@@ -196,4 +284,3 @@ export function useUniLease() {
   if (!ctx) throw new Error('useUniLease must be used within UniLeaseProvider');
   return ctx;
 }
-

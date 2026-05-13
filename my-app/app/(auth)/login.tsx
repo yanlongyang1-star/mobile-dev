@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Keyboard, KeyboardAvoidingView, Platform, Text, TextInput } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
-  const { signInStep1, loading: authLoading } = useAuth();
+  const { signInStep1, loading: authLoading, authMode } = useAuth();
   const router = useRouter();
 
   const colorScheme = useColorScheme();
@@ -20,7 +20,6 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
 
   const GREEN = '#16A34A';
-  const BG = '#179B4B';
   const INPUT_BORDER = '#D1D5DB';
   const PLACEHOLDER = '#9CA3AF';
 
@@ -35,11 +34,14 @@ export default function LoginScreen() {
 
     const ok = await signInStep1(username, password);
     if (!ok) {
-      setError('Invalid login. Use username: student and password: unilease123');
+      setError(
+        authMode === 'firebase'
+          ? 'Use an approved university email and your Firebase password.'
+          : 'Invalid login. Use username: student and password: unilease123'
+      );
       return;
     }
-    // Keep auth simple for demo: one-step sign in.
-    router.replace('/');
+    router.replace('/login2');
   };
 
   return (
@@ -126,7 +128,15 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            <Text style={styles.footerText}>Use your student email for both fields.</Text>
+            <Text style={styles.footerText}>
+              {authMode === 'firebase' ? 'Firebase mode: use your university email.' : 'Demo mode: student / unilease123'}
+            </Text>
+
+            <Link href="/signup" asChild>
+              <TouchableOpacity style={styles.createAccountButton}>
+                <Text style={[styles.createAccountText, { color: colors.primary }]}>Create Firebase account</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </View>
       </ScrollView>
@@ -267,5 +277,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  createAccountButton: {
+    alignItems: 'center',
+    paddingTop: 12,
+  },
+  createAccountText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

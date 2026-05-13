@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CAMPUS_HANDOVER_ZONES } from '@/data/mock-unilease';
 import type { UniLeaseCategory, UniLeaseItem } from '@/data/mock-unilease';
+import { useUniLease } from '@/contexts/UniLeaseContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 type ListingMode = 'rental' | 'consignment';
@@ -134,6 +135,7 @@ function FlipModeCard({
 
 export default function CreateListingScreen() {
   const tintColor = useThemeColor({}, 'tint');
+  const { addListing } = useUniLease();
   const [mode, setMode] = useState<ListingMode>('rental');
 
   const [itemTitle, setItemTitle] = useState('MacBook Air M1');
@@ -183,7 +185,7 @@ export default function CreateListingScreen() {
     return next;
   };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     setSubmitted(false);
     setSubmitError('');
     setErrors({});
@@ -193,6 +195,24 @@ export default function CreateListingScreen() {
       setSubmitError('Please complete required fields before submitting.');
       return;
     }
+
+    if (mode === 'rental') {
+      const item = await addListing({
+        title: itemTitle,
+        category,
+        condition,
+        campusLocation,
+        pricePerDay: positiveNumber(dailyPrice) ?? 0,
+        description: `${condition} ${category.toLowerCase()} available for campus handover at ${campusLocation}.`,
+      });
+      if (!item) {
+        setSubmitError('Please sign in before publishing a listing.');
+        return;
+      }
+      setSubmitted(true);
+      return;
+    }
+
     setSubmitted(true);
   };
 
@@ -366,7 +386,7 @@ export default function CreateListingScreen() {
         {submitted ? (
           <ThemedView lightColor="#ECFDF3" darkColor="#0A241A" style={styles.successCard}>
             <ThemedText type="defaultSemiBold" style={{ color: '#10B981' }}>
-              Success! Your listing draft is ready.
+              Success! Your {mode === 'rental' ? 'rental listing has been published.' : 'consignment request is ready.'}
             </ThemedText>
           </ThemedView>
         ) : null}
@@ -537,4 +557,3 @@ const styles = StyleSheet.create({
   },
   submitBtnText: { color: '#fff', fontWeight: '900' },
 });
-

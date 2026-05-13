@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -19,8 +19,7 @@ export default function AuthGate() {
       // User logged in, redirect to home
       router.replace('/');
     }
-  }, [user, loading, segments]); // Removed pathname from dependency
+  }, [user, loading, router, segments]);
 
   return null;
 }
-

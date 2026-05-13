@@ -31,6 +31,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="campus"
+        options={{
+          title: 'Campus',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="location.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
@@ -45,6 +52,18 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="consignment-rental"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="booking-request"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="item/[id]"
         options={{
           href: null,
         }}
