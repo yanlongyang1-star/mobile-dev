@@ -22,4 +22,11 @@ describe('booking integration rules', () => {
       reason: 'End date must be after start date.',
     });
   });
+
+  it('rejects impossible calendar dates', () => {
+    expect(validateBookingDates('2026-02-31', '2026-03-02')).toEqual({
+      ok: false,
+      reason: 'Dates must use YYYY-MM-DD format.',
+    });
+  });
 });

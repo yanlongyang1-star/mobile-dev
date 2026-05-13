@@ -11,5 +11,6 @@ describe('date utilities', () => {
 
   it('rejects invalid date strings', () => {
     expect(parseYmd('not-a-date')).toBeNull();
+    expect(parseYmd('2026-02-31')).toBeNull();
   });
 });

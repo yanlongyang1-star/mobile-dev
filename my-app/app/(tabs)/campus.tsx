@@ -87,7 +87,13 @@ export default function CampusScreen() {
   const sendReminder = async () => {
     const zoneName = nearest?.granted ? nearest.nearest.name : CAMPUS_ZONES[0].name;
     const result = await scheduleHandoverReminder(zoneName);
-    setMessage(result.ok ? 'Reminder notification scheduled.' : result.reason ?? 'Unable to schedule reminder.');
+    setMessage(
+      result.ok
+        ? result.skipped
+          ? result.reason
+          : 'Reminder notification scheduled.'
+        : result.reason ?? 'Unable to schedule reminder.'
+    );
   };
 
   return (

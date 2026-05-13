@@ -1,8 +1,10 @@
 export function parseYmd(ymd: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
   const [y, m, d] = ymd.split('-').map((v) => Number(v));
   if (!y || !m || !d) return null;
   const dt = new Date(Date.UTC(y, m - 1, d));
   if (Number.isNaN(dt.getTime())) return null;
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
   return dt;
 }
 

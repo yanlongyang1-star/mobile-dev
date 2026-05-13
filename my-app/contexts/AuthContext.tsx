@@ -256,9 +256,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (authMode === 'firebase') {
       await firebaseSignOut();
     }
+    await clearBiometricUnlockPreference();
     setUser(null);
     setStep1Done(false);
     setStep1Email(null);
+    setBiometricUnlockSaved(false);
   }, [authMode]);
 
   const signUp = useCallback(

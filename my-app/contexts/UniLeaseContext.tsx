@@ -68,6 +68,14 @@ type UniLeaseContextValue = {
 
 const UniLeaseContext = createContext<UniLeaseContextValue | undefined>(undefined);
 
+function mergeHydratedBookings(localBookings: UniLeaseBooking[], remoteBookings: UniLeaseBooking[]) {
+  const merged = new Map<string, UniLeaseBooking>();
+  for (const booking of remoteBookings) merged.set(booking.id, booking);
+  // Local wins for matching ids so offline status/rating changes survive a restart.
+  for (const booking of localBookings) merged.set(booking.id, booking);
+  return Array.from(merged.values()).sort((a, b) => b.createdAt - a.createdAt);
+}
+
 export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const meUid = user?.uid ?? null;
@@ -111,10 +119,9 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
       ]);
       if (!active) return;
 
-      if (remoteBookings.length) {
-        setBookings(remoteBookings);
-      } else if (localBookings.length) {
-        setBookings(localBookings);
+      const hydratedBookings = mergeHydratedBookings(localBookings, remoteBookings);
+      if (hydratedBookings.length) {
+        setBookings(hydratedBookings);
       } else {
         setBookings([
           {
