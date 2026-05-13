@@ -11,7 +11,7 @@ export default function SignUpScreen() {
   const router = useRouter();
   const { signUp, authMode, loading } = useAuth();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [displayName, setDisplayName] = useState('Jason Student');
   const [email, setEmail] = useState('');

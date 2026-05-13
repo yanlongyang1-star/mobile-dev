@@ -11,6 +11,10 @@ module.exports = ({ config }) => {
     ...config,
     plugins: [
       ...(config.plugins || []),
+      'expo-font',
+      'expo-image',
+      'expo-sqlite',
+      'expo-web-browser',
       [
         'react-native-google-mobile-ads',
         {

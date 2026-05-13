@@ -16,7 +16,8 @@ Notifications.setNotificationHandler({
 
 export async function requestNotificationAccess() {
   const current = await Notifications.getPermissionsAsync();
-  const finalStatus = current.granted ? current : await Notifications.requestPermissionsAsync();
+  const finalStatus =
+    current.status === 'granted' ? current : await Notifications.requestPermissionsAsync();
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('handover-reminders', {
@@ -25,8 +26,9 @@ export async function requestNotificationAccess() {
     });
   }
 
-  await recordAppEvent('notification_permission', { granted: finalStatus.granted });
-  return finalStatus.granted;
+  const granted = finalStatus.status === 'granted';
+  await recordAppEvent('notification_permission', { granted });
+  return granted;
 }
 
 export async function scheduleHandoverReminder(zoneName: string) {

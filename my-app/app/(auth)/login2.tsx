@@ -13,7 +13,7 @@ export default function Login2Screen() {
   const router = useRouter();
 
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
