@@ -14,10 +14,10 @@ export const unstable_settings = {
 };
 
 function RootLayoutNav() {
-  const { user, loading } = useAuth();
+  const { user, hydrating } = useAuth();
   const colorScheme = useColorScheme();
 
-  if (loading) {
+  if (hydrating) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
