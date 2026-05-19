@@ -1,14 +1,27 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Platform } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { formatAuthError } from '@/services/auth';
 
 export default function Profile() {
   const {
     user,
     signOut,
+    authMode,
+    refreshEmailVerificationStatus,
+    requestVerificationEmailResend,
     biometricCaps,
     biometricUnlockSaved,
     refreshBiometricCaps,
@@ -16,12 +29,41 @@ export default function Profile() {
   } = useAuth();
   const router = useRouter();
   const [bioBusy, setBioBusy] = useState(false);
+  const [verifyBusy, setVerifyBusy] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       void refreshBiometricCaps();
-    }, [refreshBiometricCaps])
+      if (authMode === 'firebase') {
+        void refreshEmailVerificationStatus();
+      }
+    }, [refreshBiometricCaps, authMode, refreshEmailVerificationStatus])
   );
+
+  const onRefreshVerification = async () => {
+    if (authMode !== 'firebase') return;
+    setVerifyBusy(true);
+    try {
+      await refreshEmailVerificationStatus();
+    } catch (e) {
+      Alert.alert('Could not refresh', e instanceof Error ? e.message : 'Unknown error');
+    } finally {
+      setVerifyBusy(false);
+    }
+  };
+
+  const onResendVerification = async () => {
+    if (authMode !== 'firebase') return;
+    setVerifyBusy(true);
+    try {
+      await requestVerificationEmailResend();
+      Alert.alert('Email sent', 'Check your inbox (and spam) for a new verification link.');
+    } catch (e) {
+      Alert.alert('Could not send email', formatAuthError(e));
+    } finally {
+      setVerifyBusy(false);
+    }
+  };
 
   const onSignOut = async () => {
     Alert.alert('Confirm Sign Out', 'Are you sure you want to sign out of UniLease?', [
@@ -75,7 +117,54 @@ export default function Profile() {
 
         <Text style={[styles.label, { marginTop: 12 }]}>Status</Text>
         <Text style={styles.value}>{user ? 'Signed in' : 'Not signed in'}</Text>
+
+        {authMode === 'firebase' && user?.email ? (
+          <>
+            <Text style={[styles.label, { marginTop: 12 }]}>Email</Text>
+            <Text style={styles.value}>{user.email}</Text>
+            <Text style={[styles.label, { marginTop: 12 }]}>Email verified</Text>
+            <Text style={[styles.value, user.emailVerified ? styles.verifiedYes : styles.verifiedNo]}>
+              {user.emailVerified ? 'Yes' : 'No — open the link we emailed you'}
+            </Text>
+          </>
+        ) : null}
       </View>
+
+      {authMode === 'firebase' && user && !user.emailVerified ? (
+        <View style={styles.infoCard}>
+          <Text style={styles.sectionTitle}>Verify your university email</Text>
+          <Text style={styles.privacy}>
+            After you tap the link in your email, come back here and tap &quot;Refresh status&quot; so the app and
+            Firestore stay in sync.
+          </Text>
+          <View style={styles.verifyRow}>
+            <TouchableOpacity
+              style={[styles.verifyButton, styles.verifyButtonSecondary]}
+              onPress={() => void onResendVerification()}
+              disabled={verifyBusy}
+              activeOpacity={0.9}
+            >
+              {verifyBusy ? (
+                <ActivityIndicator color="#0A84FF" />
+              ) : (
+                <Text style={styles.verifyButtonSecondaryText}>Resend email</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.verifyButton}
+              onPress={() => void onRefreshVerification()}
+              disabled={verifyBusy}
+              activeOpacity={0.9}
+            >
+              {verifyBusy ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.verifyButtonText}>Refresh status</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
 
       {user ? (
         <View style={styles.infoCard}>
@@ -179,6 +268,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#0F1720',
     fontWeight: '700',
+  },
+  verifiedYes: {
+    color: '#15803D',
+  },
+  verifiedNo: {
+    color: '#B45309',
+  },
+  verifyRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  verifyButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 10,
+    backgroundColor: '#0A84FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifyButtonSecondary: {
+    backgroundColor: '#E2E8F0',
+  },
+  verifyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  verifyButtonSecondaryText: {
+    color: '#0F1720',
+    fontSize: 14,
+    fontWeight: '800',
   },
   signOutButton: {
     marginTop: 4,

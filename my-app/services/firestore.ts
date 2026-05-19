@@ -98,3 +98,58 @@ export async function getFirestoreHealth() {
   }
   return { configured: true, detail: 'Firestore service is ready for booking sync.' };
 }
+
+/** Stored at `users/{uid}` after email/password sign-up (extend with profile UI later). */
+export type UniLeaseUserProfile = {
+  uid: string;
+  email: string;
+  displayName: string;
+  studentId?: string;
+  emailVerified: boolean;
+  createdAt: unknown;
+  updatedAt: unknown;
+};
+
+export async function saveUserProfileOnSignUp(params: {
+  uid: string;
+  email: string;
+  displayName: string;
+  studentId?: string;
+}): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const firestore = getConfiguredDb();
+  if (!firestore) return { ok: false, reason: 'Firebase is not configured' };
+
+  await setDoc(
+    doc(firestore, 'users', params.uid),
+    {
+      uid: params.uid,
+      email: params.email.trim().toLowerCase(),
+      displayName: params.displayName.trim(),
+      ...(params.studentId?.trim() ? { studentId: params.studentId.trim() } : {}),
+      emailVerified: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+  return { ok: true };
+}
+
+/** Call after `reload(user)` so Firestore matches Firebase Auth email verification. */
+export async function syncUserEmailVerifiedToFirestore(
+  uid: string,
+  emailVerified: boolean
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const firestore = getConfiguredDb();
+  if (!firestore) return { ok: false, reason: 'Firebase is not configured' };
+
+  await setDoc(
+    doc(firestore, 'users', uid),
+    {
+      emailVerified,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+  return { ok: true };
+}

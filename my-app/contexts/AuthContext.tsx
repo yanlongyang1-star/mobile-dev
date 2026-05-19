@@ -13,14 +13,33 @@ import {
 } from '@/services/biometricUnlock';
 import {
   isAllowedUniversityEmail,
+  getConfiguredAuth,
   isFirebaseAuthConfigured,
+  resendVerificationEmail,
   signIn,
   signOut as firebaseSignOut,
   signUp as firebaseSignUp,
   subscribeAuthState,
 } from '@/services/auth';
+import { syncUserEmailVerifiedToFirestore } from '@/services/firestore';
+import { reload, type User as FirebaseUser } from 'firebase/auth';
 
-export type UniLeaseUser = { uid: string; username: string };
+export type UniLeaseUser = {
+  uid: string;
+  username: string;
+  /** Present when signed in with Firebase email/password. */
+  email?: string | null;
+  emailVerified?: boolean;
+};
+
+function mapFirebaseUserToUniLease(firebaseUser: FirebaseUser): UniLeaseUser {
+  return {
+    uid: firebaseUser.uid,
+    username: firebaseUser.displayName || firebaseUser.email || firebaseUser.uid,
+    email: firebaseUser.email,
+    emailVerified: firebaseUser.emailVerified,
+  };
+}
 
 const DEMO_USERNAME = 'student';
 const DEMO_PASSWORD = 'unilease123';
@@ -46,9 +65,13 @@ type AuthContextValue = {
   completeSignIn: (username: string, password: string) => Promise<DemoSignInOutcome>;
   signInStep1: (username: string, password: string) => Promise<boolean>;
   signInStep2: (username: string, password: string) => Promise<boolean>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<boolean>;
+  signUp: (email: string, password: string, displayName?: string, studentId?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   authMode: 'firebase' | 'demo';
+  /** Firebase only: reload current user from server and sync `emailVerified` to Firestore. */
+  refreshEmailVerificationStatus: () => Promise<void>;
+  /** Firebase only: resend verification email (rate-limited by Firebase). */
+  requestVerificationEmailResend: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -72,14 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setLoading(true);
     const unsubscribe = subscribeAuthState((firebaseUser) => {
-      setUser(
-        firebaseUser
-          ? {
-              uid: firebaseUser.uid,
-              username: firebaseUser.displayName || firebaseUser.email || firebaseUser.uid,
-            }
-          : null
-      );
+      setUser(firebaseUser ? mapFirebaseUserToUniLease(firebaseUser) : null);
       setLoading(false);
     });
 
@@ -134,10 +150,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (authMode === 'firebase') {
           if (!u || !p || !isAllowedUniversityEmail(u)) return 'invalid_credentials';
           const firebaseUser = await signIn(u, p);
-          setUser({
-            uid: firebaseUser.uid,
-            username: firebaseUser.displayName || firebaseUser.email || firebaseUser.uid,
-          });
+          setUser(mapFirebaseUserToUniLease(firebaseUser));
           setStep1Done(true);
           setStep1Email(u);
           return 'ok';
@@ -199,10 +212,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (authMode === 'firebase') {
           if (!step1Email || u !== step1Email) return false;
           const firebaseUser = await signIn(u, p);
-          setUser({
-            uid: firebaseUser.uid,
-            username: firebaseUser.displayName || firebaseUser.email || firebaseUser.uid,
-          });
+          setUser(mapFirebaseUserToUniLease(firebaseUser));
           return true;
         }
         const ok = u === DEMO_USERNAME && p === DEMO_PASSWORD && step1Email != null && u === step1Email;
@@ -264,15 +274,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [authMode]);
 
   const signUp = useCallback(
-    async (email: string, password: string, displayName?: string) => {
+    async (email: string, password: string, displayName?: string, studentId?: string) => {
       if (authMode !== 'firebase') return false;
       setLoading(true);
       try {
-        const firebaseUser = await firebaseSignUp(normalize(email), password, displayName);
-        setUser({
-          uid: firebaseUser.uid,
-          username: firebaseUser.displayName || firebaseUser.email || firebaseUser.uid,
-        });
+        const firebaseUser = await firebaseSignUp(normalize(email), password, displayName, studentId);
+        setUser(mapFirebaseUserToUniLease(firebaseUser));
         return true;
       } finally {
         setLoading(false);
@@ -280,6 +287,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
     [authMode]
   );
+
+  const refreshEmailVerificationStatus = useCallback(async () => {
+    if (authMode !== 'firebase') return;
+    const u = getConfiguredAuth().currentUser;
+    if (!u) return;
+    await reload(u);
+    const result = await syncUserEmailVerifiedToFirestore(u.uid, u.emailVerified);
+    if (!result.ok) {
+      // eslint-disable-next-line no-console
+      console.warn('[refreshEmailVerificationStatus]', result.reason);
+    }
+    setUser(mapFirebaseUserToUniLease(u));
+  }, [authMode]);
+
+  const requestVerificationEmailResend = useCallback(async () => {
+    if (authMode !== 'firebase') return;
+    const u = getConfiguredAuth().currentUser;
+    if (!u) throw new Error('You are not signed in.');
+    await resendVerificationEmail(u);
+  }, [authMode]);
 
   const value = useMemo<AuthContextValue>(() => {
     return {
@@ -298,6 +325,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signInStep2,
       signUp,
       signOut,
+      refreshEmailVerificationStatus,
+      requestVerificationEmailResend,
     };
   }, [
     authMode,
@@ -308,6 +337,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     hydrating,
     loading,
     refreshBiometricCaps,
+    refreshEmailVerificationStatus,
+    requestVerificationEmailResend,
     setBiometricUnlockPreference,
     signInStep1,
     signInStep2,

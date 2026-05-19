@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
   Keyboard,
@@ -206,12 +206,23 @@ export default function LoginScreen() {
               </Text>
 
               {authMode === 'firebase' ? (
-                <Link href="/signup" asChild>
-                  <TouchableOpacity style={styles.createAccountButton}>
-                    <Text style={styles.createAccountText}>Create Firebase account</Text>
-                  </TouchableOpacity>
-                </Link>
-              ) : null}
+                <Text style={[styles.footerText, { marginTop: 8 }]}>
+                  New to UniLease? Create an account with your university email below.
+                </Text>
+              ) : (
+                <Text style={[styles.footerText, { marginTop: 8 }]}>
+                  Demo mode: add FIREBASE_* in <Text style={{ fontWeight: '900' }}>.env</Text> to enable real sign up.
+                  You can still open the sign-up screen to preview the form.
+                </Text>
+              )}
+
+              <TouchableOpacity
+                style={styles.createAccountButton}
+                onPress={() => router.push('/signup')}
+                disabled={authLoading}
+                activeOpacity={0.88}>
+                <Text style={styles.createAccountText}>Create an account</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>

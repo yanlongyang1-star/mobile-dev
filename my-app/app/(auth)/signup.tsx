@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -7,15 +18,19 @@ import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function SignUpScreen() {
   const router = useRouter();
   const { signUp, authMode, loading } = useAuth();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
-  const [displayName, setDisplayName] = useState('Jason Student');
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [studentId, setStudentId] = useState('');
   const [error, setError] = useState('');
 
   const onSubmit = async () => {
@@ -30,14 +45,27 @@ export default function SignUpScreen() {
       setError('Enter a name, university email and password with at least 6 characters.');
       return;
     }
+    if (!EMAIL_RE.test(email.trim())) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
     try {
-      const ok = await signUp(email, password, displayName);
+      const sid = studentId.trim();
+      const ok = await signUp(email, password, displayName, sid || undefined);
       if (!ok) {
         setError('Sign up failed. Check Firebase configuration and allowed email domain.');
         return;
       }
-      router.replace('/');
+      Alert.alert(
+        'Verify your email',
+        'We sent a verification link to your university inbox. Check spam folders too. You can use the app now; some schools require verified email for certain actions.',
+        [{ text: 'Continue', onPress: () => router.replace('/') }]
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign up failed.');
     }
@@ -45,7 +73,10 @@ export default function SignUpScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]} scrollEnabled={false}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={[styles.logoCircle, { backgroundColor: `${colors.primary}22` }]}>
             <MaterialIcons name="school" size={42} color={colors.primary} />
@@ -82,6 +113,23 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.secondary }]}>Student ID (optional)</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
+              value={studentId}
+              onChangeText={(text) => {
+                setStudentId(text);
+                setError('');
+              }}
+              autoCapitalize="characters"
+              placeholder="e.g. 12345678"
+              placeholderTextColor="#9CA3AF"
+              editable={!loading}
+              maxLength={32}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
@@ -92,6 +140,22 @@ export default function SignUpScreen() {
               }}
               secureTextEntry
               placeholder="Minimum 6 characters"
+              placeholderTextColor="#9CA3AF"
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.secondary }]}>Confirm password</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                setError('');
+              }}
+              secureTextEntry
+              placeholder="Re-enter password"
               placeholderTextColor="#9CA3AF"
               editable={!loading}
             />
