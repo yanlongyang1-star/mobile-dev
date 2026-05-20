@@ -15,7 +15,7 @@ UniLease is upgraded from a simple demo marketplace into a campus-only, context-
 
 | Requirement | Current Implementation |
 | --- | --- |
-| Functional screens and navigation | Auth, Browse, Item Details, Booking Request, My Bookings, Create Listing, Campus, Profile |
+| Functional screens and navigation | Auth, Home, Item Details, Booking Request, Explore, Post, Campus, Profile |
 | Firebase Authentication | Real Firebase email/password sign-up and sign-in are implemented when `.env` is configured; demo auth remains as fallback |
 | Firestore | `services/firestore.ts` supports items, bookings, booking status updates and ratings |
 | Firebase Test Lab | External evidence still required from Firebase console after APK/AAB build |
@@ -40,12 +40,12 @@ Goal: deliver the core app shell and borrowing flow.
 User stories:
 
 - As a student, I can sign in to access the campus marketplace.
-- As a borrower, I can browse items by category and keyword.
+- As a borrower, I can browse items by category and keyword from the Home screen.
 - As a borrower, I can open item details and pass item data into booking request.
 
 Evidence to capture:
 
-- Git commits for auth, navigation and browse screens
+- Git commits for auth, navigation and Home screens
 - Sprint board screenshot with tasks for login, browse, item details and booking form
 
 ### Sprint 2: Data and Booking

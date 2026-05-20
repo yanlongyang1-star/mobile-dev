@@ -1,7 +1,6 @@
 /**
- * Tech Minimalist design system
- * Secure · Professional · Fast · Digital
- * Dark/high-contrast monochrome with subtle slate-blue depth.
+ * UniLease visual system
+ * Campus-focused, bright, clear, and close to the Stitch reference.
  */
 
 import { Platform } from 'react-native';
@@ -11,63 +10,73 @@ export const Radius = {
   sm: 4,
   md: 8,
   lg: 12,
+  xl: 16,
 } as const;
 
 export const Brand = {
   name: 'UniLease',
-  keywords: ['Secure', 'Professional', 'Fast', 'Digital'] as const,
-  tagline: 'Secure campus marketplace',
+  keywords: ['Verified', 'Campus', 'Fast', 'Secure'] as const,
+  tagline: 'Campus gear marketplace',
 } as const;
 
-const accent = '#5B7A9A';
-const accentLight = '#3F5568';
+const primaryBlue = '#185A7D';
+const softBlue = '#E2EDFF';
+const deepInk = '#132334';
 
 export const Colors = {
   light: {
-    text: '#09090B',
-    background: '#F4F4F5',
-    surface: '#FAFAFA',
+    text: '#15202B',
+    background: '#F7FAFD',
+    surface: '#F1F5FA',
     card: '#FFFFFF',
-    tint: '#18181B',
-    primary: '#18181B',
-    secondary: '#52525B',
-    muted: '#A1A1AA',
-    border: '#E4E4E7',
-    accent: accentLight,
-    icon: '#71717A',
-    tabIconDefault: '#A1A1AA',
-    tabIconSelected: '#09090B',
+    tint: primaryBlue,
+    primary: primaryBlue,
+    secondary: '#607084',
+    muted: '#8DA0B4',
+    border: '#E0E8F1',
+    accent: '#2C7DA0',
+    icon: '#5A7188',
+    tabIconDefault: '#7F91A5',
+    tabIconSelected: primaryBlue,
     error: '#B91C1C',
     errorSurface: '#FEF2F2',
     errorBorder: '#FECACA',
-    gradientTop: '#F4F4F5',
-    gradientBottom: '#E4E4E7',
+    gradientTop: '#F7FAFD',
+    gradientBottom: softBlue,
     onPrimary: '#FFFFFF',
-    geometric: '#D4D4D8',
-    geometricMuted: '#E4E4E7',
+    geometric: '#D9E7F7',
+    geometricMuted: '#EEF5FC',
+    hero: softBlue,
+    heroText: deepInk,
+    success: '#0E8F68',
+    warning: '#9A6B00',
   },
   dark: {
     text: '#FAFAFA',
-    background: '#0A0E14',
-    surface: '#141A22',
-    card: '#161D27',
+    background: '#0C1620',
+    surface: '#142333',
+    card: '#101C28',
     tint: '#FAFAFA',
     primary: '#FAFAFA',
-    secondary: '#8B949E',
-    muted: '#6B7280',
-    border: '#2A3441',
-    accent,
+    secondary: '#B8C4D2',
+    muted: '#7F91A5',
+    border: '#25384C',
+    accent: '#8EC5E7',
     icon: '#8B949E',
     tabIconDefault: '#6B7280',
     tabIconSelected: '#FAFAFA',
     error: '#F87171',
     errorSurface: '#1F1414',
     errorBorder: '#3D2020',
-    gradientTop: '#0A0E14',
-    gradientBottom: '#141B26',
+    gradientTop: '#0C1620',
+    gradientBottom: '#142333',
     onPrimary: '#0A0E14',
-    geometric: '#1E2836',
-    geometricMuted: '#243040',
+    geometric: '#1E3347',
+    geometricMuted: '#243B52',
+    hero: '#18344D',
+    heroText: '#FAFAFA',
+    success: '#34D399',
+    warning: '#FBBF24',
   },
 };
 

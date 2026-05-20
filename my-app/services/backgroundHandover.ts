@@ -1,41 +1,48 @@
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import { Platform } from 'react-native';
 import { CAMPUS_ZONES, distanceMeters } from './campusCapabilities';
 import { recordAppEvent } from './localDatabase';
 import { scheduleHandoverReminder } from './notifications';
 
 export const HANDOVER_LOCATION_TASK = 'unilease-handover-location-task';
 
-TaskManager.defineTask(HANDOVER_LOCATION_TASK, async ({ data, error }) => {
-  if (error) {
-    await recordAppEvent('background_handover_error', { message: error.message });
-    return;
-  }
+if (Platform.OS !== 'web') {
+  TaskManager.defineTask(HANDOVER_LOCATION_TASK, async ({ data, error }) => {
+    if (error) {
+      await recordAppEvent('background_handover_error', { message: error.message });
+      return;
+    }
 
-  const payload = data as { locations?: Location.LocationObject[] };
-  const latest = payload.locations?.[0];
-  if (!latest) return;
+    const payload = data as { locations?: Location.LocationObject[] };
+    const latest = payload.locations?.[0];
+    if (!latest) return;
 
-  const current = {
-    latitude: latest.coords.latitude,
-    longitude: latest.coords.longitude,
-  };
-  const nearest = CAMPUS_ZONES.map((zone) => ({
-    ...zone,
-    distance: distanceMeters(current, zone),
-  })).sort((a, b) => a.distance - b.distance)[0];
+    const current = {
+      latitude: latest.coords.latitude,
+      longitude: latest.coords.longitude,
+    };
+    const nearest = CAMPUS_ZONES.map((zone) => ({
+      ...zone,
+      distance: distanceMeters(current, zone),
+    })).sort((a, b) => a.distance - b.distance)[0];
 
-  await recordAppEvent('background_handover_location', {
-    nearest: nearest.name,
-    distance: nearest.distance,
+    await recordAppEvent('background_handover_location', {
+      nearest: nearest.name,
+      distance: nearest.distance,
+    });
+
+    if (nearest.distance <= 120) {
+      await scheduleHandoverReminder(nearest.name);
+    }
   });
-
-  if (nearest.distance <= 120) {
-    await scheduleHandoverReminder(nearest.name);
-  }
-});
+}
 
 export async function startHandoverLocationTask() {
+  if (Platform.OS === 'web') {
+    return { ok: false, reason: 'Background location tasks require an iOS or Android build.' };
+  }
+
   const foreground = await Location.requestForegroundPermissionsAsync();
   if (!foreground.granted) return { ok: false, reason: 'Foreground location permission is required.' };
 
@@ -60,6 +67,11 @@ export async function startHandoverLocationTask() {
 }
 
 export async function stopHandoverLocationTask() {
+  if (Platform.OS === 'web') {
+    await recordAppEvent('background_handover_stopped_web', {});
+    return { ok: true };
+  }
+
   const running = await Location.hasStartedLocationUpdatesAsync(HANDOVER_LOCATION_TASK);
   if (running) {
     await Location.stopLocationUpdatesAsync(HANDOVER_LOCATION_TASK);
@@ -69,6 +81,10 @@ export async function stopHandoverLocationTask() {
 }
 
 export async function getHandoverTaskStatus() {
+  if (Platform.OS === 'web') {
+    return { registered: false, running: false };
+  }
+
   const registered = await TaskManager.isTaskRegisteredAsync(HANDOVER_LOCATION_TASK);
   const running = registered ? await Location.hasStartedLocationUpdatesAsync(HANDOVER_LOCATION_TASK) : false;
   return { registered, running };

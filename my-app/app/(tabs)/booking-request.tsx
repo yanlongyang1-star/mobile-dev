@@ -1,19 +1,17 @@
-import { Image } from 'expo-image';
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { GeometricHeader } from '@/components/ui/geometric-header';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AppHeader } from '@/components/unilease/AppHeader';
+import { ItemArtwork } from '@/components/unilease/ItemArtwork';
+import { Radius } from '@/constants/theme';
 import { useUniLease } from '@/contexts/UniLeaseContext';
 import { CAMPUS_HANDOVER_ZONES } from '@/data/mock-unilease';
-import { Radius } from '@/constants/theme';
 import { useThemeColors } from '@/hooks/use-theme-colors';
-import { addDays, ymdToday } from '@/utils/date';
 import { calculateBookingQuote, validateBookingDates } from '@/utils/booking';
+import { addDays, ymdToday } from '@/utils/date';
 
 export default function BookingRequestScreen() {
   const router = useRouter();
@@ -38,12 +36,10 @@ export default function BookingRequestScreen() {
       setError('No selected item. Please go back and choose an item.');
       return;
     }
-
     if (!startDate || !endDate) {
       setError('Please enter start/end dates.');
       return;
     }
-
     const dateValidation = validateBookingDates(startDate, endDate);
     if (!dateValidation.ok) {
       setError(dateValidation.reason ?? 'Please check your booking dates.');
@@ -57,241 +53,284 @@ export default function BookingRequestScreen() {
       meetupTime,
       paymentMethod,
     });
-
     if (!ok) {
       setError('Failed to create booking. Please try again.');
       return;
     }
-
     router.replace('/explore');
   };
 
   if (!selectedItem) {
     return (
-      <View style={[styles.notSelected, { backgroundColor: colors.background }]}>
-        <ThemedText type="title">Select an item first</ThemedText>
-        <ThemedText style={styles.muted}>Go to Browse, open an item, and request a booking.</ThemedText>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary }]} onPress={() => router.replace('/')}>
-          <ThemedText style={{ color: colors.onPrimary, fontWeight: '800' }}>Go to Browse</ThemedText>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <View style={styles.notSelected}>
+          <Text style={[styles.title, { color: colors.text }]}>Select an item first</Text>
+          <Text style={[styles.bodyText, { color: colors.secondary }]}>Open an item from Home and request a booking.</Text>
+          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary }]} onPress={() => router.replace('/')}>
+            <Text style={[styles.actionText, { color: colors.onPrimary }]}>Go to Home</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   const paymentOptions: typeof paymentMethod[] = ['Card', 'Cash', 'Transfer'];
+  const inputStyle = [styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }];
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: colors.gradientBottom, dark: colors.gradientBottom }}
-      headerImage={<GeometricHeader />}
-    >
-      <ScrollView contentContainerStyle={styles.content}>
-        <ThemedView style={[styles.hero, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Image source={require('@/assets/images/react-logo.png')} style={styles.itemImage} />
-          <View style={{ flex: 1 }}>
-            <ThemedText type="defaultSemiBold">{selectedItem.title}</ThemedText>
-            <ThemedText>${selectedItem.pricePerDay}/day · {selectedItem.location}</ThemedText>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <AppHeader
+          title="Booking"
+          subtitle="Request handover"
+          leftIcon="arrow-back"
+          leftLabel="Go back"
+          onLeftPress={() => router.back()}
+          onRightPress={() => router.push('/profile')}
+        />
+
+        <View style={[styles.itemCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <ItemArtwork item={selectedItem} height={88} style={styles.itemImage} />
+          <View style={styles.itemInfo}>
+            <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={1}>
+              {selectedItem.title}
+            </Text>
+            <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+              ${selectedItem.pricePerDay}/day · {selectedItem.location}
+            </Text>
+            <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+              Owner trust {selectedItem.owner.trustScore.toFixed(1)}
+            </Text>
           </View>
-        </ThemedView>
+        </View>
 
-        <ThemedView style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-            Booking dates
-          </ThemedText>
-
-          <View style={styles.row2}>
-            <View style={styles.field}>
-              <ThemedText>Start (YYYY-MM-DD)</ThemedText>
-              <TextInput value={startDate} onChangeText={setStartDate} style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.text }]} />
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Booking dates</Text>
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <Text style={[styles.label, { color: colors.secondary }]}>Start</Text>
+              <TextInput value={startDate} onChangeText={setStartDate} style={inputStyle} placeholder="YYYY-MM-DD" />
             </View>
-            <View style={styles.field}>
-              <ThemedText>End (YYYY-MM-DD)</ThemedText>
-              <TextInput value={endDate} onChangeText={setEndDate} style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.text }]} />
+            <View style={styles.half}>
+              <Text style={[styles.label, { color: colors.secondary }]}>End</Text>
+              <TextInput value={endDate} onChangeText={setEndDate} style={inputStyle} placeholder="YYYY-MM-DD" />
             </View>
           </View>
+          <Text style={[styles.meta, { color: colors.secondary }]}>Rental days: {preview?.days ?? 1}</Text>
+        </View>
 
-          <ThemedText style={styles.hint}>
-            Rental days: {preview?.days ?? 1} · Estimated deposit and fee shown below.
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedView style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-            Handover meetup
-          </ThemedText>
-
-          <ThemedText style={styles.smallLabel}>Location</ThemedText>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Handover meetup</Text>
+          <Text style={[styles.label, { color: colors.secondary }]}>Location</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-            {CAMPUS_HANDOVER_ZONES.map((z) => {
-              const active = z === meetupLocation;
+            {CAMPUS_HANDOVER_ZONES.map((zone) => {
+              const active = zone === meetupLocation;
               return (
                 <TouchableOpacity
-                  key={z}
-                  onPress={() => setMeetupLocation(z)}
+                  key={zone}
+                  activeOpacity={0.86}
+                  onPress={() => setMeetupLocation(zone)}
                   style={[
                     styles.chip,
-                    { borderColor: colors.border },
-                    active ? { backgroundColor: colors.primary, borderColor: colors.primary } : { backgroundColor: colors.card },
+                    { borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primary : colors.card },
                   ]}
                 >
-                  <ThemedText style={{ color: active ? colors.onPrimary : colors.muted, fontWeight: '900' }}>{z}</ThemedText>
+                  <Text style={[styles.chipText, { color: active ? colors.onPrimary : colors.secondary }]}>{zone}</Text>
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
 
-          <View style={{ height: 12 }} />
+          <Text style={[styles.label, { color: colors.secondary, marginTop: 12 }]}>Time</Text>
+          <TextInput value={meetupTime} onChangeText={setMeetupTime} style={inputStyle} placeholder="12:00" />
+        </View>
 
-          <ThemedText style={styles.smallLabel}>Time (HH:MM)</ThemedText>
-          <TextInput value={meetupTime} onChangeText={setMeetupTime} style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.text }]} placeholder="12:00" />
-        </ThemedView>
-
-        <ThemedView style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-            Payment summary
-          </ThemedText>
-
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment summary</Text>
           <View style={styles.summaryRow}>
-            <ThemedText>Booking fee</ThemedText>
-            <ThemedText style={{ fontWeight: '900' }}>${preview?.bookingFee ?? 0}</ThemedText>
+            <Text style={[styles.summaryLabel, { color: colors.secondary }]}>Booking fee</Text>
+            <Text style={[styles.summaryValue, { color: colors.text }]}>${preview?.bookingFee ?? 0}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <ThemedText>Deposit</ThemedText>
-            <ThemedText style={{ fontWeight: '900' }}>${preview?.deposit ?? 0}</ThemedText>
+            <Text style={[styles.summaryLabel, { color: colors.secondary }]}>Deposit</Text>
+            <Text style={[styles.summaryValue, { color: colors.text }]}>${preview?.deposit ?? 0}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <ThemedText>Total due</ThemedText>
-            <ThemedText style={{ fontWeight: '900' }}>${(preview?.bookingFee ?? 0) + (preview?.deposit ?? 0)}</ThemedText>
+            <Text style={[styles.summaryLabel, { color: colors.secondary }]}>Total due</Text>
+            <Text style={[styles.summaryValue, { color: colors.primary }]}>${preview?.totalDue ?? 0}</Text>
           </View>
 
-          <ThemedText style={styles.smallLabel}>Payment method</ThemedText>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-            {paymentOptions.map((opt) => {
-              const active = opt === paymentMethod;
+          <Text style={[styles.label, { color: colors.secondary, marginTop: 8 }]}>Payment method</Text>
+          <View style={styles.wrapRow}>
+            {paymentOptions.map((option) => {
+              const active = option === paymentMethod;
               return (
                 <TouchableOpacity
-                  key={opt}
-                  onPress={() => setPaymentMethod(opt)}
+                  key={option}
+                  activeOpacity={0.86}
+                  onPress={() => setPaymentMethod(option)}
                   style={[
                     styles.chip,
-                    { borderColor: colors.border },
-                    active ? { backgroundColor: colors.primary, borderColor: colors.primary } : { backgroundColor: colors.card },
+                    { borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primary : colors.card },
                   ]}
                 >
-                  <ThemedText style={{ color: active ? colors.onPrimary : colors.muted, fontWeight: '900' }}>{opt}</ThemedText>
+                  <Text style={[styles.chipText, { color: active ? colors.onPrimary : colors.secondary }]}>{option}</Text>
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
-        </ThemedView>
+          </View>
+        </View>
 
         {error ? (
           <View style={[styles.errorBox, { backgroundColor: colors.errorSurface, borderColor: colors.errorBorder }]}>
-            <ThemedText style={{ color: colors.error, fontWeight: '800' }}>{error}</ThemedText>
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
           </View>
         ) : null}
 
         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary }]} onPress={onSubmit}>
-          <ThemedText style={{ color: colors.onPrimary, fontWeight: '900' }}>Send booking request</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.secondaryLink} onPress={() => router.back()} activeOpacity={0.9}>
-          <ThemedText style={{ fontWeight: '800' }}>Back</ThemedText>
+          <MaterialIcons name="send" size={17} color={colors.onPrimary} />
+          <Text style={[styles.actionText, { color: colors.onPrimary }]}>Send booking request</Text>
         </TouchableOpacity>
       </ScrollView>
-    </ParallaxScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   content: {
-    padding: 16,
     gap: 14,
+    padding: 20,
+    paddingBottom: 32,
   },
   notSelected: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    flex: 1,
+    gap: 12,
+    justifyContent: 'center',
+    padding: 24,
   },
-  muted: {
-    opacity: 0.8,
-    textAlign: 'center',
+  title: {
+    fontSize: 24,
+    fontWeight: '900',
   },
-  hero: {
+  itemCard: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: Radius.md,
-    borderWidth: 1,
+    padding: 12,
   },
   itemImage: {
-    width: 76,
-    height: 76,
-    borderRadius: Radius.sm,
+    width: 88,
   },
-  section: {
-    borderRadius: Radius.md,
-    padding: 14,
+  itemInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  card: {
+    borderRadius: Radius.lg,
     borderWidth: 1,
+    padding: 14,
   },
   sectionTitle: {
+    fontSize: 16,
+    fontWeight: '900',
     marginBottom: 10,
   },
-  row2: {
+  row: {
     flexDirection: 'row',
     gap: 10,
+    marginBottom: 10,
   },
-  field: {
+  half: {
     flex: 1,
   },
+  label: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+    marginBottom: 7,
+    textTransform: 'uppercase',
+  },
   input: {
-    marginTop: 6,
     borderRadius: Radius.md,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    height: 44,
-  },
-  hint: {
-    marginTop: 10,
-    opacity: 0.85,
-  },
-  smallLabel: {
-    marginBottom: 6,
+    fontSize: 13,
     fontWeight: '800',
-    opacity: 0.9,
+    height: 46,
+    paddingHorizontal: 12,
+  },
+  meta: {
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 17,
+  },
+  bodyText: {
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 19,
+    textAlign: 'center',
   },
   chipRow: {
-    gap: 10,
-    paddingVertical: 4,
+    gap: 8,
+    paddingRight: 4,
+  },
+  wrapRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   chip: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '900',
   },
   summaryRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    paddingVertical: 5,
+  },
+  summaryLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '900',
   },
   errorBox: {
-    borderRadius: Radius.md,
-    padding: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
+    padding: 12,
+  },
+  errorText: {
+    fontSize: 13,
+    fontWeight: '900',
   },
   actionBtn: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    flexDirection: 'row',
+    gap: 8,
     height: 52,
-    borderRadius: Radius.md,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
   },
-  secondaryLink: {
-    alignItems: 'center',
-    marginTop: 4,
+  actionText: {
+    fontSize: 14,
+    fontWeight: '900',
   },
 });

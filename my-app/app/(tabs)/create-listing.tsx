@@ -1,16 +1,16 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useMemo, useRef, useState } from 'react';
-import { Alert, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { CAMPUS_HANDOVER_ZONES } from '@/data/mock-unilease';
-import type { UniLeaseCategory, UniLeaseItem } from '@/data/mock-unilease';
+import { AppHeader } from '@/components/unilease/AppHeader';
+import { Radius } from '@/constants/theme';
 import { useUniLease } from '@/contexts/UniLeaseContext';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { CAMPUS_HANDOVER_ZONES, type UniLeaseCategory, type UniLeaseItem } from '@/data/mock-unilease';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { moderateText } from '@/utils/profanityFilter';
 
 type ListingMode = 'rental' | 'consignment';
@@ -31,115 +31,33 @@ function positiveNumber(value: string) {
 }
 
 function FieldError({ text }: { text?: string }) {
+  const colors = useThemeColors();
   if (!text) return null;
-  return <ThemedText style={styles.errorText}>{text}</ThemedText>;
+  return <Text style={[styles.errorText, { color: colors.error }]}>{text}</Text>;
 }
 
-function Chip({
-  label,
-  active,
-  onPress,
-  activeColor,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  activeColor: string;
-}) {
+function OptionChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
+      activeOpacity={0.86}
       onPress={onPress}
-      activeOpacity={0.92}
-      style={[styles.chip, active ? { backgroundColor: activeColor } : { backgroundColor: '#FFFFFF22' }]}
+      style={[
+        styles.chip,
+        { borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primary : colors.card },
+      ]}
     >
-      <ThemedText style={{ color: active ? '#fff' : '#64748B', fontWeight: '800' }}>{label}</ThemedText>
+      <Text style={[styles.chipText, { color: active ? colors.onPrimary : colors.secondary }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
 
-function FlipModeCard({
-  title,
-  subtitle,
-  icon,
-  bullets,
-  selected,
-  onSelect,
-}: {
-  title: string;
-  subtitle: string;
-  icon: string;
-  bullets: string[];
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const progress = useRef(new Animated.Value(0)).current;
-  const [flipped, setFlipped] = useState(false);
-
-  const animateTo = (toValue: number) => {
-    Animated.timing(progress, {
-      toValue,
-      duration: 480,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleHover = (enter: boolean) => {
-    if (Platform.OS !== 'web') return;
-    animateTo(enter ? 1 : flipped ? 1 : 0);
-  };
-
-  const onPress = () => {
-    const next = !flipped;
-    setFlipped(next);
-    animateTo(next ? 1 : 0);
-    onSelect();
-  };
-
-  const frontRotate = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-  const backRotate = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['180deg', '360deg'],
-  });
-
-  return (
-    <Pressable
-      onPress={onPress}
-      onHoverIn={() => handleHover(true)}
-      onHoverOut={() => handleHover(false)}
-      style={[styles.flipWrap, selected ? styles.flipWrapActive : null]}
-    >
-      <Animated.View style={[styles.flipFace, styles.frontFace, { transform: [{ perspective: 1000 }, { rotateY: frontRotate }] }]}>
-        <View style={styles.glossOverlay} />
-        <ThemedText style={styles.flipIcon}>{icon}</ThemedText>
-        <ThemedText type="defaultSemiBold" style={styles.flipTitle}>
-          {title}
-        </ThemedText>
-        <ThemedText style={styles.flipSub}>{subtitle}</ThemedText>
-      </Animated.View>
-
-      <Animated.View style={[styles.flipFace, styles.backFace, { transform: [{ perspective: 1000 }, { rotateY: backRotate }] }]}>
-        <ThemedText type="defaultSemiBold" style={styles.backTitle}>
-          Why {title}?
-        </ThemedText>
-        {bullets.map((b) => (
-          <ThemedText key={b} style={styles.backBullet}>
-            • {b}
-          </ThemedText>
-        ))}
-      </Animated.View>
-    </Pressable>
-  );
-}
-
 export default function CreateListingScreen() {
-  const tintColor = useThemeColor({}, 'tint');
+  const router = useRouter();
+  const colors = useThemeColors();
   const { addListing } = useUniLease();
-  const [mode, setMode] = useState<ListingMode>('rental');
 
+  const [mode, setMode] = useState<ListingMode>('rental');
   const [itemTitle, setItemTitle] = useState('MacBook Air M1');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<UniLeaseCategory>('Laptops');
@@ -161,7 +79,6 @@ export default function CreateListingScreen() {
   const [listingPhotoUri, setListingPhotoUri] = useState<string | null>(null);
 
   const submitLabel = mode === 'rental' ? 'Publish Rental Listing' : 'Submit Consignment Request';
-
   const previewLine = useMemo(() => {
     if (mode === 'rental') return `Rental · $${dailyPrice || '0'}/day · ${campusLocation}`;
     return `Consignment · $${sellingPrice || '0'} · ${campusLocation}`;
@@ -176,8 +93,8 @@ export default function CreateListingScreen() {
     if (!campusLocation) next.campusLocation = 'Choose campus location.';
 
     if (mode === 'rental') {
-      if (!positiveNumber(dailyPrice)) next.dailyPrice = 'Enter valid daily price.';
-      if (!positiveNumber(deposit)) next.deposit = 'Enter valid deposit.';
+      if (!positiveNumber(dailyPrice)) next.dailyPrice = 'Enter a valid daily price.';
+      if (!positiveNumber(deposit)) next.deposit = 'Enter a valid deposit.';
       if (!positiveNumber(minRentalDays)) next.minRentalDays = 'Enter minimum rental days.';
       if (!availability) next.availability = 'Choose availability.';
     } else {
@@ -192,6 +109,7 @@ export default function CreateListingScreen() {
     setSubmitted(false);
     setSubmitError('');
     setErrors({});
+
     const next = validate();
     if (Object.keys(next).length) {
       setErrors(next);
@@ -224,8 +142,6 @@ export default function CreateListingScreen() {
         setSubmitError('Please sign in before publishing a listing.');
         return;
       }
-      setSubmitted(true);
-      return;
     }
 
     setSubmitted(true);
@@ -235,7 +151,7 @@ export default function CreateListingScreen() {
     setSubmitError('');
     try {
       if (Platform.OS === 'web') {
-        setSubmitError('Photo picking is limited on web in this demo; use iOS or Android for the full flow.');
+        setSubmitError('Photo picking is available in the iOS/Android build.');
         return;
       }
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -255,364 +171,416 @@ export default function CreateListingScreen() {
     }
   };
 
-  const photoSource = listingPhotoUri ? { uri: listingPhotoUri } : require('@/assets/images/favicon.png');
-  const photoReady = listingPhotoUri != null;
+  const inputStyle = [styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }];
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D9F2FF', dark: '#10242B' }}
-      headerImage={
-        <View style={styles.headerDecor}>
-          <View style={styles.headerBlobA} />
-          <View style={styles.headerBlobB} />
-          <View style={styles.headerBlobC} />
-        </View>
-      }
-    >
-      <ScrollView contentContainerStyle={styles.content}>
-        <ThemedView style={styles.heroBlock}>
-          <ThemedText type="title" style={styles.title}>
-            List Your Item
-          </ThemedText>
-          <ThemedText style={styles.subtitle}>Choose how you want to share or sell your item</ThemedText>
-        </ThemedView>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <AppHeader
+          title="Post"
+          subtitle="Rental or consignment"
+          leftIcon="arrow-back"
+          leftLabel="Go home"
+          onLeftPress={() => router.push('/')}
+          onRightPress={() => router.push('/profile')}
+        />
 
-        <View style={styles.flipRow}>
-          <FlipModeCard
-            title="Rental"
-            subtitle="Let other students borrow it for a short time"
-            icon="🔄"
-            bullets={['Daily pricing', 'Deposit support', 'Student-to-student borrowing']}
-            selected={mode === 'rental'}
-            onSelect={() => setMode('rental')}
-          />
-          <FlipModeCard
-            title="Consignment"
-            subtitle="List it for sale with UniLease support"
-            icon="💼"
-            bullets={['Sale listing support', 'Flexible payout option', 'Better use of unused items']}
-            selected={mode === 'consignment'}
-            onSelect={() => setMode('consignment')}
-          />
+        <View style={[styles.hero, { backgroundColor: colors.hero }]}>
+          <Text style={[styles.heroTitle, { color: colors.heroText }]}>List campus gear in minutes.</Text>
+          <Text style={[styles.heroCopy, { color: colors.heroText }]}>
+            Add item details, choose a handover zone, and publish a student-ready listing.
+          </Text>
+        </View>
+
+        <View style={[styles.segmented, { backgroundColor: colors.surface }]}>
+          {(['rental', 'consignment'] as const).map((option) => {
+            const active = option === mode;
+            return (
+              <TouchableOpacity
+                key={option}
+                activeOpacity={0.9}
+                onPress={() => setMode(option)}
+                style={[styles.segment, { backgroundColor: active ? colors.primary : 'transparent' }]}
+              >
+                <Text style={[styles.segmentText, { color: active ? colors.onPrimary : colors.secondary }]}>
+                  {option === 'rental' ? 'Rental' : 'Consignment'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {submitError ? (
-          <ThemedView lightColor="#FFF5F5" darkColor="#3B0A0A" style={styles.errorBanner}>
-            <ThemedText style={styles.errorBannerText}>{submitError}</ThemedText>
-          </ThemedView>
+          <View style={[styles.messageCard, { backgroundColor: colors.errorSurface, borderColor: colors.errorBorder }]}>
+            <Text style={[styles.messageText, { color: colors.error }]}>{submitError}</Text>
+          </View>
         ) : null}
 
-        <ThemedView style={styles.formCard}>
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-            Item Basics
-          </ThemedText>
+        {submitted ? (
+          <View style={[styles.messageCard, { backgroundColor: `${colors.success}18`, borderColor: `${colors.success}55` }]}>
+            <Text style={[styles.messageText, { color: colors.success }]}>
+              {mode === 'rental' ? 'Rental listing published.' : 'Consignment request submitted.'}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Item Basics</Text>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Item title</ThemedText>
-            <TextInput value={itemTitle} onChangeText={setItemTitle} style={[styles.input, errors.itemTitle ? styles.inputError : null]} />
+            <Text style={[styles.label, { color: colors.secondary }]}>Item title</Text>
+            <TextInput value={itemTitle} onChangeText={setItemTitle} style={inputStyle} />
             <FieldError text={errors.itemTitle} />
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Description</ThemedText>
+            <Text style={[styles.label, { color: colors.secondary }]}>Description</Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
               multiline
               numberOfLines={4}
-              style={[styles.input, styles.textArea, errors.description ? styles.inputError : null]}
-              placeholder="Describe condition, usage, pickup details..."
+              placeholder="Describe condition, usage, and pickup details..."
+              placeholderTextColor={colors.muted}
+              style={[inputStyle, styles.textArea]}
             />
             <FieldError text={errors.description} />
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Category</ThemedText>
+            <Text style={[styles.label, { color: colors.secondary }]}>Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-              {CATEGORY_OPTIONS.map((opt) => (
-                <Chip key={opt} label={opt} active={category === opt} onPress={() => setCategory(opt)} activeColor={tintColor} />
+              {CATEGORY_OPTIONS.map((option) => (
+                <OptionChip key={option} label={option} active={category === option} onPress={() => setCategory(option)} />
               ))}
             </ScrollView>
             <FieldError text={errors.category} />
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Condition</ThemedText>
-            <View style={styles.chipRow}>
-              {CONDITION_OPTIONS.map((opt) => (
-                <Chip key={opt} label={opt} active={condition === opt} onPress={() => setCondition(opt)} activeColor={tintColor} />
+            <Text style={[styles.label, { color: colors.secondary }]}>Condition</Text>
+            <View style={styles.wrapRow}>
+              {CONDITION_OPTIONS.map((option) => (
+                <OptionChip key={option} label={option} active={condition === option} onPress={() => setCondition(option)} />
               ))}
             </View>
             <FieldError text={errors.condition} />
           </View>
 
           <View style={styles.field}>
-            <ThemedText style={styles.label}>Campus location</ThemedText>
+            <Text style={[styles.label, { color: colors.secondary }]}>Campus location</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
               {CAMPUS_HANDOVER_ZONES.map((zone) => (
-                <Chip key={zone} label={zone} active={campusLocation === zone} onPress={() => setCampusLocation(zone)} activeColor={tintColor} />
+                <OptionChip
+                  key={zone}
+                  label={zone}
+                  active={campusLocation === zone}
+                  onPress={() => setCampusLocation(zone)}
+                />
               ))}
             </ScrollView>
             <FieldError text={errors.campusLocation} />
           </View>
 
-          <View>
-            <ThemedText style={styles.label}>Listing photo (optional)</ThemedText>
-            <TouchableOpacity style={styles.photoBox} onPress={pickListingPhoto}>
-              <Image source={photoSource} style={styles.photo} />
-              <View style={{ flex: 1 }}>
-                <ThemedText type="defaultSemiBold">{photoReady ? 'Photo selected' : 'Add from gallery'}</ThemedText>
-                <ThemedText style={styles.photoSub}>Skip this or tap to pick an image from your library.</ThemedText>
+          <View style={styles.fieldLast}>
+            <Text style={[styles.label, { color: colors.secondary }]}>Listing photo</Text>
+            <TouchableOpacity
+              activeOpacity={0.88}
+              onPress={pickListingPhoto}
+              style={[styles.photoPicker, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            >
+              {listingPhotoUri ? (
+                <Image source={{ uri: listingPhotoUri }} style={styles.photoThumb} contentFit="cover" />
+              ) : (
+                <View style={[styles.photoThumb, { backgroundColor: colors.hero }]}>
+                  <MaterialIcons name="add-photo-alternate" size={27} color={colors.primary} />
+                </View>
+              )}
+              <View style={styles.photoText}>
+                <Text style={[styles.photoTitle, { color: colors.text }]}>
+                  {listingPhotoUri ? 'Photo selected' : 'Add from gallery'}
+                </Text>
+                <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+                  iOS/Android photo picker
+                </Text>
               </View>
+              <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
             </TouchableOpacity>
           </View>
-        </ThemedView>
+        </View>
 
         {mode === 'rental' ? (
-          <ThemedView style={styles.formCard}>
-            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-              Rental Details
-            </ThemedText>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Rental Details</Text>
             <View style={styles.row}>
               <View style={styles.half}>
-                <ThemedText style={styles.label}>Daily price</ThemedText>
-                <TextInput value={dailyPrice} onChangeText={setDailyPrice} keyboardType="decimal-pad" style={[styles.input, errors.dailyPrice ? styles.inputError : null]} />
+                <Text style={[styles.label, { color: colors.secondary }]}>Daily price</Text>
+                <TextInput value={dailyPrice} onChangeText={setDailyPrice} keyboardType="decimal-pad" style={inputStyle} />
                 <FieldError text={errors.dailyPrice} />
               </View>
               <View style={styles.half}>
-                <ThemedText style={styles.label}>Deposit</ThemedText>
-                <TextInput value={deposit} onChangeText={setDeposit} keyboardType="decimal-pad" style={[styles.input, errors.deposit ? styles.inputError : null]} />
+                <Text style={[styles.label, { color: colors.secondary }]}>Deposit</Text>
+                <TextInput value={deposit} onChangeText={setDeposit} keyboardType="decimal-pad" style={inputStyle} />
                 <FieldError text={errors.deposit} />
               </View>
             </View>
             <View style={styles.field}>
-              <ThemedText style={styles.label}>Minimum rental days</ThemedText>
-              <TextInput value={minRentalDays} onChangeText={setMinRentalDays} keyboardType="number-pad" style={[styles.input, errors.minRentalDays ? styles.inputError : null]} />
+              <Text style={[styles.label, { color: colors.secondary }]}>Minimum rental days</Text>
+              <TextInput value={minRentalDays} onChangeText={setMinRentalDays} keyboardType="number-pad" style={inputStyle} />
               <FieldError text={errors.minRentalDays} />
             </View>
-            <View>
-              <ThemedText style={styles.label}>Availability status</ThemedText>
-              <View style={styles.chipRow}>
-                {AVAILABILITY_OPTIONS.map((opt) => (
-                  <Chip key={opt} label={opt} active={availability === opt} onPress={() => setAvailability(opt)} activeColor={tintColor} />
+            <View style={styles.fieldLast}>
+              <Text style={[styles.label, { color: colors.secondary }]}>Availability</Text>
+              <View style={styles.wrapRow}>
+                {AVAILABILITY_OPTIONS.map((option) => (
+                  <OptionChip
+                    key={option}
+                    label={option}
+                    active={availability === option}
+                    onPress={() => setAvailability(option)}
+                  />
                 ))}
               </View>
               <FieldError text={errors.availability} />
             </View>
-          </ThemedView>
+          </View>
         ) : (
-          <ThemedView style={styles.formCard}>
-            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-              Consignment Details
-            </ThemedText>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Consignment Details</Text>
             <View style={styles.field}>
-              <ThemedText style={styles.label}>Expected selling price</ThemedText>
-              <TextInput value={sellingPrice} onChangeText={setSellingPrice} keyboardType="decimal-pad" style={[styles.input, errors.sellingPrice ? styles.inputError : null]} />
+              <Text style={[styles.label, { color: colors.secondary }]}>Expected selling price</Text>
+              <TextInput value={sellingPrice} onChangeText={setSellingPrice} keyboardType="decimal-pad" style={inputStyle} />
               <FieldError text={errors.sellingPrice} />
             </View>
             <View style={styles.field}>
-              <ThemedText style={styles.label}>Support option</ThemedText>
-              <View style={styles.chipRow}>
-                {SUPPORT_OPTIONS.map((opt) => (
-                  <Chip key={opt} label={opt} active={supportOption === opt} onPress={() => setSupportOption(opt)} activeColor={tintColor} />
+              <Text style={[styles.label, { color: colors.secondary }]}>Support option</Text>
+              <View style={styles.wrapRow}>
+                {SUPPORT_OPTIONS.map((option) => (
+                  <OptionChip
+                    key={option}
+                    label={option}
+                    active={supportOption === option}
+                    onPress={() => setSupportOption(option)}
+                  />
                 ))}
               </View>
               <FieldError text={errors.supportOption} />
             </View>
-            <View>
-              <ThemedText style={styles.label}>Payout method</ThemedText>
+            <View style={styles.fieldLast}>
+              <Text style={[styles.label, { color: colors.secondary }]}>Payout method</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-                {PAYOUT_OPTIONS.map((opt) => (
-                  <Chip key={opt} label={opt} active={payoutMethod === opt} onPress={() => setPayoutMethod(opt)} activeColor={tintColor} />
+                {PAYOUT_OPTIONS.map((option) => (
+                  <OptionChip
+                    key={option}
+                    label={option}
+                    active={payoutMethod === option}
+                    onPress={() => setPayoutMethod(option)}
+                  />
                 ))}
               </ScrollView>
               <FieldError text={errors.payoutMethod} />
             </View>
-          </ThemedView>
+          </View>
         )}
 
-        <ThemedView style={styles.previewCard}>
-          <ThemedText type="defaultSemiBold">Live Preview</ThemedText>
-          <ThemedText style={styles.previewTitle}>{itemTitle || 'Item name'}</ThemedText>
-          <ThemedText style={styles.previewSub}>{previewLine}</ThemedText>
-        </ThemedView>
+        <View style={[styles.previewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View>
+            <Text style={[styles.previewLabel, { color: colors.secondary }]}>Live Preview</Text>
+            <Text style={[styles.previewTitle, { color: colors.text }]}>{itemTitle || 'Item name'}</Text>
+            <Text style={[styles.meta, { color: colors.secondary }]}>{previewLine}</Text>
+          </View>
+          <View style={[styles.previewIcon, { backgroundColor: colors.hero }]}>
+            <MaterialIcons name={mode === 'rental' ? 'autorenew' : 'shopping-bag'} size={24} color={colors.primary} />
+          </View>
+        </View>
 
-        {submitted ? (
-          <ThemedView lightColor="#ECFDF3" darkColor="#0A241A" style={styles.successCard}>
-            <ThemedText type="defaultSemiBold" style={{ color: '#10B981' }}>
-              Success! Your {mode === 'rental' ? 'rental listing has been published.' : 'consignment request is ready.'}
-            </ThemedText>
-          </ThemedView>
-        ) : null}
-
-        <TouchableOpacity style={[styles.submitBtn, { backgroundColor: tintColor }]} onPress={onSubmit}>
-          <ThemedText style={styles.submitBtnText}>{submitLabel}</ThemedText>
+        <TouchableOpacity activeOpacity={0.9} style={[styles.submitBtn, { backgroundColor: colors.primary }]} onPress={onSubmit}>
+          <Text style={[styles.submitBtnText, { color: colors.onPrimary }]}>{submitLabel}</Text>
         </TouchableOpacity>
       </ScrollView>
-    </ParallaxScrollView>
+    </SafeAreaView>
   );
 }
 
-const webGlass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(10px)' } as const) : {};
-
 const styles = StyleSheet.create({
-  content: { gap: 14 },
-  headerDecor: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#D8F3FF',
   },
-  headerBlobA: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 999,
-    backgroundColor: '#BCE6F6',
-    left: -30,
-    top: 20,
+  content: {
+    gap: 14,
+    padding: 20,
+    paddingBottom: 32,
   },
-  headerBlobB: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 999,
-    backgroundColor: '#A7DAEE',
-    right: 20,
-    top: 10,
-    opacity: 0.9,
+  hero: {
+    borderRadius: Radius.lg,
+    gap: 8,
+    padding: 18,
   },
-  headerBlobC: {
-    position: 'absolute',
-    width: 300,
-    height: 140,
-    borderRadius: 100,
-    backgroundColor: '#E8FAFF',
-    right: -30,
-    bottom: -10,
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    lineHeight: 27,
   },
-  heroBlock: {
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF66',
-    borderWidth: 1,
-    borderColor: '#FFFFFF88',
-    ...webGlass,
+  heroCopy: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 20,
+    opacity: 0.82,
   },
-  title: { fontSize: 30, lineHeight: 32 },
-  subtitle: { marginTop: 6, opacity: 0.85, fontSize: 14 },
-  flipRow: {
+  segmented: {
+    borderRadius: Radius.lg,
     flexDirection: 'row',
-    gap: 12,
+    padding: 4,
   },
-  flipWrap: {
+  segment: {
+    alignItems: 'center',
+    borderRadius: Radius.md,
     flex: 1,
-    height: 210,
-    borderRadius: 18,
-    position: 'relative',
+    paddingVertical: 11,
   },
-  flipWrapActive: {
-    shadowColor: '#38BDF8',
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '900',
   },
-  flipFace: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    borderRadius: 18,
-    padding: 14,
+  card: {
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: '#FFFFFF99',
-    backgroundColor: '#FFFFFF33',
-    backfaceVisibility: 'hidden',
-    shadowColor: '#0EA5E9',
-    shadowOpacity: 0.22,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 10 },
-    ...webGlass,
-  },
-  frontFace: {
-    justifyContent: 'center',
-  },
-  backFace: {
-    justifyContent: 'center',
-  },
-  glossOverlay: {
-    position: 'absolute',
-    width: '70%',
-    height: 46,
-    borderRadius: 40,
-    backgroundColor: '#FFFFFF40',
-    top: 16,
-    left: 12,
-  },
-  flipIcon: { fontSize: 30, marginBottom: 10 },
-  flipTitle: { fontSize: 18, marginBottom: 6 },
-  flipSub: { fontSize: 13, opacity: 0.88, lineHeight: 19 },
-  backTitle: { marginBottom: 8, fontSize: 16 },
-  backBullet: { fontSize: 14, opacity: 0.9, marginBottom: 6 },
-  formCard: {
-    borderRadius: 14,
     padding: 14,
-    borderWidth: 1,
-    borderColor: '#FFFFFF88',
-    backgroundColor: '#FFFFFF55',
-    ...webGlass,
   },
-  sectionTitle: { marginBottom: 10 },
-  field: { marginBottom: 12 },
-  row: { flexDirection: 'row', gap: 10 },
-  half: { flex: 1 },
-  label: { fontWeight: '800', marginBottom: 6, opacity: 0.9 },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    marginBottom: 12,
+  },
+  field: {
+    marginBottom: 14,
+  },
+  fieldLast: {
+    marginBottom: 0,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+    marginBottom: 7,
+    textTransform: 'uppercase',
+  },
   input: {
-    height: 44,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#FFFFFFB3',
-    paddingHorizontal: 10,
+    fontSize: 14,
+    fontWeight: '700',
+    minHeight: 46,
+    paddingHorizontal: 12,
   },
   textArea: {
-    minHeight: 92,
+    minHeight: 96,
+    paddingTop: 12,
     textAlignVertical: 'top',
-    paddingTop: 10,
   },
-  inputError: { borderColor: '#EF4444' },
-  chipRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', paddingVertical: 2 },
-  chip: { paddingHorizontal: 12, paddingVertical: 9, borderRadius: 999 },
-  photoBox: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#FFFFFF99',
-    padding: 10,
+  row: {
     flexDirection: 'row',
     gap: 10,
-    alignItems: 'center',
+    marginBottom: 14,
   },
-  photo: { width: 52, height: 52, borderRadius: 10 },
-  photoSub: { opacity: 0.8, fontSize: 13, marginTop: 2 },
-  errorText: { marginTop: 6, color: '#FF3B30', fontWeight: '700', fontSize: 13 },
-  errorBanner: { borderRadius: 12, padding: 12, backgroundColor: '#FF3B301F' },
-  errorBannerText: { color: '#FF3B30', fontWeight: '800' },
-  previewCard: {
-    borderRadius: 14,
-    padding: 14,
-    backgroundColor: '#FFFFFF66',
+  half: {
+    flex: 1,
+  },
+  chipRow: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  wrapRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#FFFFFF88',
-    ...webGlass,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
-  previewTitle: { marginTop: 6, fontWeight: '800', fontSize: 16 },
-  previewSub: { marginTop: 2, opacity: 0.85 },
-  successCard: { borderRadius: 12, padding: 12, backgroundColor: '#10B9811A' },
-  submitBtn: {
-    height: 52,
-    borderRadius: 12,
-    justifyContent: 'center',
+  chipText: {
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  photoPicker: {
     alignItems: 'center',
-    marginTop: 2,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    padding: 10,
   },
-  submitBtnText: { color: '#fff', fontWeight: '900' },
+  photoThumb: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    height: 56,
+    justifyContent: 'center',
+    width: 56,
+  },
+  photoText: {
+    flex: 1,
+  },
+  photoTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  meta: {
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 17,
+  },
+  previewCard: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: 14,
+  },
+  previewLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  previewTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    marginTop: 3,
+  },
+  previewIcon: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  submitBtn: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    height: 52,
+    justifyContent: 'center',
+  },
+  submitBtnText: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  messageCard: {
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    padding: 12,
+  },
+  messageText: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  errorText: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 6,
+  },
 });

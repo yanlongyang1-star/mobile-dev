@@ -6,15 +6,15 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
+import { AppHeader } from '@/components/unilease/AppHeader';
 import { MinimalButton } from '@/components/ui/minimal-button';
 import { MinimalCard } from '@/components/ui/minimal-card';
-import { Brand } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { formatAuthError } from '@/services/auth';
@@ -109,13 +109,18 @@ export default function Profile() {
   const hardwareOk = !!(biometricCaps?.hardwareAvailable && biometricCaps.enrolled);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}>
-      <Text style={[styles.title, { color: colors.text }]}>Profile</Text>
-      <Text style={[styles.subtitle, { color: colors.secondary }]}>
-        {Brand.name} · {Brand.tagline}
-      </Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <AppHeader
+          title="Profile"
+          subtitle="Account and verification"
+          leftIcon="arrow-back"
+          rightIcon="my-location"
+          leftLabel="Go back"
+          rightLabel="Open campus tools"
+          onLeftPress={() => router.back()}
+          onRightPress={() => router.push('/campus')}
+        />
 
       <MinimalCard style={styles.cardGap}>
         <Text style={[styles.label, { color: colors.muted }]}>DISPLAY NAME</Text>
@@ -194,7 +199,8 @@ export default function Profile() {
       ) : null}
 
       <MinimalButton label="Sign Out" onPress={onSignOut} style={styles.signOutBtn} />
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -205,6 +211,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 40,
+    gap: 14,
   },
   title: {
     fontSize: 28,
