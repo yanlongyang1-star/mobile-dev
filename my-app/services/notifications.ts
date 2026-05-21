@@ -5,14 +5,16 @@ import { recordAppEvent } from './localDatabase';
 const REMINDER_COOLDOWN_MS = 10 * 60 * 1000;
 const lastReminderAtByZone = new Map<string, number>();
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export async function requestNotificationAccess() {
   const current = await Notifications.getPermissionsAsync();
