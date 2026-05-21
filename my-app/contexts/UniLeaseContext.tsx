@@ -209,6 +209,9 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
           pricePerDay: params.pricePerDay,
           location: params.campusLocation,
           condition: params.condition,
+          imageUrl:
+            'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80',
+          badge: 'New',
           owner: {
             uid: meUid,
             name: user.username,

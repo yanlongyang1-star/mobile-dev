@@ -1,14 +1,16 @@
-import { Image } from 'expo-image';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useUniLease } from '@/contexts/UniLeaseContext';
-import { TextInput } from 'react-native-paper';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-function statusLabel(status: string) {
+import { AppHeader } from '@/components/unilease/AppHeader';
+import { ItemArtwork } from '@/components/unilease/ItemArtwork';
+import { Radius } from '@/constants/theme';
+import { useUniLease, type UniLeaseBooking, type UniLeaseBookingStatus } from '@/contexts/UniLeaseContext';
+import { useThemeColors } from '@/hooks/use-theme-colors';
+
+function statusLabel(status: UniLeaseBookingStatus) {
   switch (status) {
     case 'pending':
       return 'Pending';
@@ -18,256 +20,367 @@ function statusLabel(status: string) {
       return 'Picked up';
     case 'returned':
       return 'Returned';
-    default:
-      return status;
   }
 }
 
-function statusColor(status: string) {
+function nextStatus(status: UniLeaseBookingStatus): UniLeaseBookingStatus | null {
   switch (status) {
     case 'pending':
-      return '#F59E0B';
+      return 'approved';
     case 'approved':
-      return '#3B82F6';
+      return 'picked_up';
     case 'picked_up':
-      return '#8B5CF6';
+      return 'returned';
     case 'returned':
-      return '#10B981';
-    default:
-      return '#94A3B8';
+      return null;
+  }
+}
+
+function nextAction(status: UniLeaseBookingStatus) {
+  switch (status) {
+    case 'pending':
+      return 'Approve';
+    case 'approved':
+      return 'Mark picked up';
+    case 'picked_up':
+      return 'Mark returned';
+    case 'returned':
+      return '';
   }
 }
 
 function BookingCard({
   booking,
   itemTitle,
+  item,
   onAdvance,
   onRate,
 }: {
-  booking: any;
+  booking: UniLeaseBooking;
   itemTitle: string;
-  onAdvance: (nextStatus: 'approved' | 'picked_up' | 'returned') => void;
+  item: Parameters<typeof ItemArtwork>[0]['item'];
+  onAdvance: (next: UniLeaseBookingStatus) => void;
   onRate: (score: number, comment: string) => void;
 }) {
-  const [score, setScore] = useState(5);
+  const colors = useThemeColors();
+  const [score, setScore] = useState(booking.rating?.score ?? 5);
   const [comment, setComment] = useState(booking.rating?.comment ?? '');
+  const next = nextStatus(booking.status);
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <Image source={require('@/assets/images/react-logo.png')} style={styles.cardImage} />
-        <View style={{ flex: 1 }}>
-          <ThemedText type="defaultSemiBold">{itemTitle}</ThemedText>
-          <ThemedText>
-            {booking.startDate} → {booking.endDate}
-          </ThemedText>
+    <View style={[styles.bookingCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={styles.bookingTop}>
+        <ItemArtwork item={item} height={76} style={styles.bookingImage} />
+        <View style={styles.bookingInfo}>
+          <Text style={[styles.bookingTitle, { color: colors.text }]} numberOfLines={1}>
+            {itemTitle}
+          </Text>
+          <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+            {booking.startDate} to {booking.endDate}
+          </Text>
+          <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+            {booking.meetupLocation} · {booking.meetupTime}
+          </Text>
         </View>
-        <View style={[styles.badge, { backgroundColor: statusColor(booking.status) + '22', borderColor: statusColor(booking.status) }]}>
-          <ThemedText style={{ fontWeight: '800', color: statusColor(booking.status) }}>{statusLabel(booking.status)}</ThemedText>
+        <View style={[styles.statusPill, { backgroundColor: colors.hero }]}>
+          <Text style={[styles.statusText, { color: colors.primary }]}>{statusLabel(booking.status)}</Text>
         </View>
       </View>
 
-      <View style={styles.metaRow}>
-        <ThemedText>Meetup: {booking.meetupLocation}</ThemedText>
-        <ThemedText>Time: {booking.meetupTime}</ThemedText>
+      <View style={styles.summaryGrid}>
+        <View style={[styles.summaryBox, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.summaryLabel, { color: colors.secondary }]}>Fee</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>${booking.bookingFee}</Text>
+        </View>
+        <View style={[styles.summaryBox, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.summaryLabel, { color: colors.secondary }]}>Deposit</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>${booking.deposit}</Text>
+        </View>
+        <View style={[styles.summaryBox, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.summaryLabel, { color: colors.secondary }]}>Pay</Text>
+          <Text style={[styles.summaryValue, { color: colors.text }]}>{booking.paymentMethod}</Text>
+        </View>
       </View>
 
-      <View style={styles.payRow}>
-        <ThemedText>Fee: ${booking.bookingFee}</ThemedText>
-        <ThemedText>Deposit: ${booking.deposit}</ThemedText>
-      </View>
-
-      {booking.status === 'pending' ? (
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#3B82F6' }]} onPress={() => onAdvance('approved')}>
-          <ThemedText style={{ color: '#fff', fontWeight: '800' }}>Approve</ThemedText>
+      {next ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+          onPress={() => onAdvance(next)}
+        >
+          <Text style={[styles.primaryButtonText, { color: colors.onPrimary }]}>{nextAction(booking.status)}</Text>
         </TouchableOpacity>
-      ) : null}
-
-      {booking.status === 'approved' ? (
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#8B5CF6' }]} onPress={() => onAdvance('picked_up')}>
-          <ThemedText style={{ color: '#fff', fontWeight: '800' }}>Mark Picked up</ThemedText>
-        </TouchableOpacity>
-      ) : null}
-
-      {booking.status === 'picked_up' ? (
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#10B981' }]} onPress={() => onAdvance('returned')}>
-          <ThemedText style={{ color: '#fff', fontWeight: '800' }}>Mark Returned</ThemedText>
-        </TouchableOpacity>
-      ) : null}
-
-      {booking.status === 'returned' ? (
-        <View style={{ marginTop: 12 }}>
-          <ThemedText style={styles.sectionTitle}>Rate this booking</ThemedText>
-          {booking.rating ? (
-            <ThemedText style={styles.muted}>You rated: {booking.rating.score}/5</ThemedText>
-          ) : null}
-
-          <View style={styles.starsRow}>
-            {[1, 2, 3, 4, 5].map((s) => {
-              const active = s <= score;
+      ) : (
+        <View style={styles.ratingBlock}>
+          <Text style={[styles.ratingTitle, { color: colors.text }]}>Rating</Text>
+          <View style={styles.scoreRow}>
+            {[1, 2, 3, 4, 5].map((value) => {
+              const active = value <= score;
               return (
                 <TouchableOpacity
-                  key={s}
-                  style={[styles.starChip, active ? { backgroundColor: '#F59E0B' } : { backgroundColor: '#00000010' }]}
-                  onPress={() => {
-                    setScore(s);
-                    if (booking.rating) setComment(booking.rating.comment);
-                  }}
+                  key={value}
+                  activeOpacity={0.85}
+                  onPress={() => setScore(value)}
+                  style={[styles.scoreButton, { backgroundColor: active ? colors.primary : colors.surface }]}
                 >
-                  <ThemedText style={{ color: active ? '#fff' : '#94A3B8', fontWeight: '900' }}>{s}</ThemedText>
+                  <Text style={{ color: active ? colors.onPrimary : colors.secondary, fontWeight: '900' }}>
+                    {value}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
-
           <TextInput
             value={comment}
             onChangeText={setComment}
-            placeholder="Short comment (optional)"
-            placeholderTextColor="#94A3B8"
-            style={styles.commentInput}
-            multiline
+            placeholder="Short comment"
+            placeholderTextColor={colors.muted}
+            style={[styles.commentInput, { backgroundColor: colors.surface, color: colors.text }]}
           />
-
           <TouchableOpacity
-            style={[styles.actionBtn, { marginTop: 10, backgroundColor: '#0EA5E9' }]}
+            activeOpacity={0.9}
+            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
             onPress={() => onRate(score, comment)}
           >
-            <ThemedText style={{ color: '#fff', fontWeight: '800' }}>{booking.rating ? 'Update rating' : 'Submit rating'}</ThemedText>
+            <Text style={[styles.primaryButtonText, { color: colors.onPrimary }]}>
+              {booking.rating ? 'Update rating' : 'Submit rating'}
+            </Text>
           </TouchableOpacity>
         </View>
-      ) : null}
+      )}
     </View>
   );
 }
 
 export default function BookingsScreen() {
+  const router = useRouter();
+  const colors = useThemeColors();
   const { myBookings, items, advanceBookingStatus, leaveRating } = useUniLease();
 
-  const itemTitleById = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const it of items) map[it.id] = it.title;
+  const itemById = useMemo(() => {
+    const map = new Map(items.map((item) => [item.id, item]));
     return map;
   }, [items]);
 
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#F5F5F5', dark: '#222' }}
-      headerImage={<IconSymbol size={200} color="#999" name="paperplane.fill" style={styles.headerImage} />}
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">My Bookings</ThemedText>
-      </ThemedView>
+  const activeCount = myBookings.filter((booking) => booking.status !== 'returned').length;
+  const returnedCount = myBookings.length - activeCount;
 
-      <ScrollView style={styles.listContainer}>
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <AppHeader
+          title="Explore"
+          subtitle="Bookings and handovers"
+          leftLabel="Open campus tools"
+          onLeftPress={() => router.push('/campus')}
+          onRightPress={() => router.push('/profile')}
+        />
+
+        <View style={[styles.hero, { backgroundColor: colors.hero }]}>
+          <View>
+            <Text style={[styles.heroEyebrow, { color: colors.primary }]}>Borrower flow</Text>
+            <Text style={[styles.heroTitle, { color: colors.heroText }]}>Track every rental step.</Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/')}
+            style={[styles.heroAction, { backgroundColor: colors.primary }]}
+          >
+            <MaterialIcons name="search" size={16} color={colors.onPrimary} />
+            <Text style={[styles.heroActionText, { color: colors.onPrimary }]}>Browse</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.statValue, { color: colors.text }]}>{activeCount}</Text>
+            <Text style={[styles.statLabel, { color: colors.secondary }]}>Active</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.statValue, { color: colors.text }]}>{returnedCount}</Text>
+            <Text style={[styles.statLabel, { color: colors.secondary }]}>Returned</Text>
+          </View>
+        </View>
+
         {myBookings.length === 0 ? (
-          <ThemedView style={styles.emptyCard}>
-            <ThemedText type="defaultSemiBold">No bookings yet</ThemedText>
-            <ThemedText style={styles.muted}>Go back to Browse and request an item.</ThemedText>
-          </ThemedView>
+          <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.bookingTitle, { color: colors.text }]}>No bookings yet</Text>
+            <Text style={[styles.meta, { color: colors.secondary }]}>Open a campus item and send a booking request.</Text>
+          </View>
         ) : null}
 
-        {myBookings.map((booking) => (
-          <BookingCard
-            key={booking.id}
-            booking={booking}
-            itemTitle={itemTitleById[booking.itemId] ?? 'Unknown item'}
-            onAdvance={(next) => advanceBookingStatus(booking.id, next)}
-            onRate={(s, c) => leaveRating(booking.id, s, c)}
-          />
-        ))}
+        {myBookings.map((booking) => {
+          const item = itemById.get(booking.itemId) ?? null;
+          return (
+            <BookingCard
+              key={booking.id}
+              booking={booking}
+              item={item}
+              itemTitle={item?.title ?? 'Unknown item'}
+              onAdvance={(next) => advanceBookingStatus(booking.id, next)}
+              onRate={(score, comment) => leaveRating(booking.id, score, comment)}
+            />
+          );
+        })}
       </ScrollView>
-    </ParallaxScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    bottom: -40,
-    left: -20,
-    position: 'absolute',
+  safeArea: {
+    flex: 1,
   },
-  titleContainer: {
+  content: {
+    gap: 14,
+    padding: 20,
+    paddingBottom: 32,
+  },
+  hero: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 14,
+    padding: 18,
+  },
+  heroEyebrow: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  heroTitle: {
+    fontSize: 21,
+    fontWeight: '900',
+    lineHeight: 26,
+    marginTop: 4,
+  },
+  heroAction: {
+    alignItems: 'center',
+    borderRadius: Radius.md,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  heroActionText: {
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statCard: {
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    flex: 1,
+    padding: 14,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  bookingCard: {
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    gap: 12,
+    padding: 12,
+  },
+  bookingTop: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  bookingImage: {
+    width: 76,
+  },
+  bookingInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  bookingTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  meta: {
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 17,
+  },
+  statusPill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  summaryGrid: {
     flexDirection: 'row',
     gap: 8,
   },
-  listContainer: {
+  summaryBox: {
+    borderRadius: Radius.md,
     flex: 1,
-    marginTop: 10,
+    padding: 10,
   },
-  card: {
-    marginBottom: 12,
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: '#00000010',
+  summaryLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
-  cardTop: {
-    flexDirection: 'row',
-    gap: 12,
+  summaryValue: {
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: 3,
+  },
+  primaryButton: {
     alignItems: 'center',
-  },
-  cardImage: {
-    width: 62,
-    height: 62,
-    borderRadius: 10,
-  },
-  badge: {
-    borderWidth: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-  },
-  metaRow: {
-    marginTop: 10,
-    gap: 4,
-  },
-  payRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  actionBtn: {
-    marginTop: 12,
+    borderRadius: Radius.md,
     height: 44,
-    borderRadius: 10,
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  emptyCard: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#00000010',
-    marginTop: 14,
-  },
-  muted: {
-    opacity: 0.8,
-    marginTop: 6,
-  },
-  sectionTitle: {
+  primaryButtonText: {
+    fontSize: 13,
     fontWeight: '900',
   },
-  starsRow: {
-    flexDirection: 'row',
+  ratingBlock: {
     gap: 10,
-    marginTop: 10,
   },
-  starChip: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    justifyContent: 'center',
+  ratingTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  scoreButton: {
     alignItems: 'center',
+    borderRadius: Radius.md,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
   },
   commentInput: {
-    marginTop: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#00000010',
+    borderRadius: Radius.md,
+    fontSize: 13,
+    fontWeight: '700',
     minHeight: 44,
-    paddingHorizontal: 10,
-    paddingTop: 8,
-    paddingBottom: 8,
-    fontSize: 14,
-    backgroundColor: '#00000005',
+    paddingHorizontal: 12,
+  },
+  emptyCard: {
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    gap: 4,
+    padding: 16,
   },
 });

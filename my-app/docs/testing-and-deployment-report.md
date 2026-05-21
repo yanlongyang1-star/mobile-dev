@@ -14,6 +14,8 @@ Run tests with:
 npm run test
 ```
 
+For a requirement-by-requirement implementation matrix, see `docs/assessment-requirement-checklist.md`.
+
 ## Static Quality Checks
 
 Run:
@@ -30,9 +32,9 @@ Expected result: no TypeScript or lint errors.
 | Area | Test | Expected Result |
 | --- | --- | --- |
 | Login | Use demo credentials | User reaches main tabs |
-| Browse | Search `calculator` | Calculator listing appears |
+| Home | Search `calculator` | Calculator listing appears |
 | Item Details | Open listing | Details and request button appear |
-| Booking | Submit valid dates | Booking appears in My Bookings |
+| Booking | Submit valid dates | Booking appears in Explore |
 | SQLite | Restart app after booking | Booking remains available |
 | GPS | Tap Refresh GPS on Campus | App shows nearest campus zone or permission message |
 | Battery | Tap Check Battery | Battery percentage and low-power mode display |
@@ -88,3 +90,4 @@ The current implementation is assessment-ready as a strong prototype, but final 
 - APK/AAB build screenshots
 - GitHub and Azure DevOps contribution evidence
 - AdMob banner screenshot from EAS development or preview build
+- screenshots of the updated Stitch-style Home, Explore, Post, Campus and Profile screens

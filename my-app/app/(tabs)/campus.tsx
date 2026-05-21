@@ -1,12 +1,14 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Accelerometer } from 'expo-sensors';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import AdMobBanner from '@/components/AdMobBanner';
+import { AppHeader } from '@/components/unilease/AppHeader';
+import { Radius } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import {
   CAMPUS_ZONES,
   getBatterySnapshot,
@@ -28,15 +30,57 @@ function statusText(result: PromiseSettledResult<unknown>) {
   return result.status === 'fulfilled' ? 'Ready' : 'Needs attention';
 }
 
+function Metric({ label, value }: { label: string; value: string }) {
+  const colors = useThemeColors();
+  return (
+    <View style={[styles.metric, { backgroundColor: colors.surface }]}>
+      <Text style={[styles.metricLabel, { color: colors.secondary }]}>{label}</Text>
+      <Text style={[styles.metricValue, { color: colors.text }]} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function CapabilityCard({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentProps<typeof MaterialIcons>['name'];
+  title: string;
+  children: React.ReactNode;
+}) {
+  const colors = useThemeColors();
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.cardIcon, { backgroundColor: colors.hero }]}>
+          <MaterialIcons name={icon} size={22} color={colors.primary} />
+        </View>
+        <Text style={[styles.cardTitle, { color: colors.text }]}>{title}</Text>
+      </View>
+      {children}
+    </View>
+  );
+}
+
 export default function CampusScreen() {
+  const router = useRouter();
+  const colors = useThemeColors();
   const [nearest, setNearest] = useState<NearestResult>(null);
   const [battery, setBattery] = useState<BatteryResult>(null);
   const [taskStatus, setTaskStatus] = useState<TaskStatus>(null);
-  const [parallelSummary, setParallelSummary] = useState<string>('Not run yet');
+  const [parallelSummary, setParallelSummary] = useState('Not run yet');
   const [message, setMessage] = useState('');
   const [accel, setAccel] = useState({ x: 0, y: 0, z: 0 });
 
   useEffect(() => {
+    if (Platform.OS === 'web') {
+      getHandoverTaskStatus().then(setTaskStatus).catch(() => setTaskStatus(null));
+      return undefined;
+    }
+
     Accelerometer.setUpdateInterval(600);
     const subscription = Accelerometer.addListener(setAccel);
     getHandoverTaskStatus().then(setTaskStatus).catch(() => setTaskStatus(null));
@@ -61,6 +105,13 @@ export default function CampusScreen() {
     setBattery(result);
   };
 
+  const openCampusMap = async () => {
+    const zone = nearest?.granted ? nearest.nearest : CAMPUS_ZONES[0];
+    const url = `https://www.google.com/maps/search/?api=1&query=${zone.latitude},${zone.longitude}`;
+    await Linking.openURL(url);
+    setMessage(`Opening map for ${zone.name}.`);
+  };
+
   const runParallel = async () => {
     setMessage('Running checks in parallel...');
     const result = await runParallelReadinessCheck();
@@ -74,7 +125,7 @@ export default function CampusScreen() {
 
   const startTask = async () => {
     const result = await startHandoverLocationTask();
-    setMessage(result.ok ? 'Background handover monitoring started.' : result.reason ?? 'Unable to start background monitoring.');
+    setMessage(result.ok ? 'Background handover monitoring started.' : result.reason ?? 'Unable to start monitoring.');
     setTaskStatus(await getHandoverTaskStatus());
   };
 
@@ -97,209 +148,222 @@ export default function CampusScreen() {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#E7F7EF', dark: '#0F2A22' }}
-      headerImage={
-        <View style={styles.header}>
-          <MaterialIcons name="place" size={180} color="#10B98155" style={styles.headerIcon} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <AppHeader
+          title="Campus"
+          subtitle="Device readiness"
+          leftIcon="arrow-back"
+          leftLabel="Go back"
+          onLeftPress={() => router.back()}
+          onRightPress={() => router.push('/profile')}
+        />
+
+        <View style={[styles.hero, { backgroundColor: colors.hero }]}>
+          <Text style={[styles.heroTitle, { color: colors.heroText }]}>Handover tools for real devices.</Text>
+          <Text style={[styles.heroCopy, { color: colors.heroText }]}>
+            Location, sensors, battery, background tasks, notifications, AdMob, Firebase and SQLite are connected here.
+          </Text>
         </View>
-      }
-    >
-      <ScrollView contentContainerStyle={styles.content}>
-        <ThemedView style={styles.titleBlock}>
-          <ThemedText type="title">Campus Handover</ThemedText>
-          <ThemedText style={styles.subtitle}>Location-aware pickup, battery checks, sensors, notifications and background monitoring.</ThemedText>
-        </ThemedView>
 
         {message ? (
-          <ThemedView style={styles.notice}>
-            <ThemedText style={styles.noticeText}>{message}</ThemedText>
-          </ThemedView>
+          <View style={[styles.notice, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.noticeText, { color: colors.text }]}>{message}</Text>
+          </View>
         ) : null}
 
-        <ThemedView style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialIcons name="my-location" size={22} color="#0A84FF" />
-            <ThemedText type="defaultSemiBold">GPS handover zone</ThemedText>
-          </View>
+        <CapabilityCard icon="my-location" title="GPS handover zone">
           {nearest?.granted ? (
             <View style={styles.metricGrid}>
-              <View style={styles.metric}>
-                <ThemedText style={styles.metricLabel}>Nearest</ThemedText>
-                <ThemedText style={styles.metricValue}>{nearest.nearest.name}</ThemedText>
-              </View>
-              <View style={styles.metric}>
-                <ThemedText style={styles.metricLabel}>Distance</ThemedText>
-                <ThemedText style={styles.metricValue}>{nearest.nearest.distance}m</ThemedText>
-              </View>
+              <Metric label="Nearest" value={nearest.nearest.name} />
+              <Metric label="Distance" value={`${nearest.nearest.distance}m`} />
             </View>
           ) : (
-            <ThemedText style={styles.bodyText}>{nearest?.message ?? 'Tap refresh to check the closest campus meetup point.'}</ThemedText>
+            <Text style={[styles.bodyText, { color: colors.secondary }]}>
+              {nearest?.message ?? 'Check the closest campus meetup point.'}
+            </Text>
           )}
-          <TouchableOpacity style={styles.primaryButton} onPress={refreshLocation}>
-            <ThemedText style={styles.buttonText}>Refresh GPS</ThemedText>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={refreshLocation}>
+            <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Refresh GPS</Text>
           </TouchableOpacity>
-        </ThemedView>
+        </CapabilityCard>
 
-        <ThemedView style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialIcons name="battery-charging-full" size={22} color="#10B981" />
-            <ThemedText type="defaultSemiBold">Battery-aware booking</ThemedText>
+        <CapabilityCard icon="map" title="Campus map launcher">
+          <Text style={[styles.bodyText, { color: colors.secondary }]}>
+            Opens the selected handover zone in Google Maps. Uses the GPS result when available, otherwise Library Hub.
+          </Text>
+          <TouchableOpacity style={[styles.secondaryButton, { borderColor: colors.border }]} onPress={openCampusMap}>
+            <Text style={[styles.secondaryText, { color: colors.text }]}>Open Map</Text>
+          </TouchableOpacity>
+        </CapabilityCard>
+
+        <CapabilityCard icon="battery-charging-full" title="Battery-aware booking">
+          <View style={styles.metricGrid}>
+            <Metric label="Level" value={battery ? `${battery.level}%` : '--'} />
+            <Metric label="Low power" value={battery ? (battery.lowPowerMode ? 'On' : 'Off') : '--'} />
+          </View>
+          <TouchableOpacity style={[styles.secondaryButton, { borderColor: colors.border }]} onPress={refreshBattery}>
+            <Text style={[styles.secondaryText, { color: colors.text }]}>Check Battery</Text>
+          </TouchableOpacity>
+        </CapabilityCard>
+
+        <CapabilityCard icon="screen-rotation" title="Accelerometer condition check">
+          <Text style={[styles.bodyText, { color: colors.secondary }]}>
+            Motion signal: {motion} · x {accel.x.toFixed(2)} · y {accel.y.toFixed(2)} · z {accel.z.toFixed(2)}
+          </Text>
+        </CapabilityCard>
+
+        <CapabilityCard icon="notifications-active" title="Notification and Task Manager">
+          <Text style={[styles.bodyText, { color: colors.secondary }]}>
+            Background task: {taskStatus?.running ? 'Running' : 'Stopped'} · Registered:{' '}
+            {taskStatus?.registered ? 'Yes' : 'No'}
+          </Text>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={[styles.secondaryButton, { borderColor: colors.border }]} onPress={sendReminder}>
+              <Text style={[styles.secondaryText, { color: colors.text }]}>Reminder</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.secondaryButton, { borderColor: colors.border }]}
+              onPress={taskStatus?.running ? stopTask : startTask}
+            >
+              <Text style={[styles.secondaryText, { color: colors.text }]}>
+                {taskStatus?.running ? 'Stop Task' : 'Start Task'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </CapabilityCard>
+
+        <CapabilityCard icon="hub" title="Parallel Firebase and SQLite check">
+          <Text style={[styles.bodyText, { color: colors.secondary }]}>{parallelSummary}</Text>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={runParallel}>
+            <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Run Parallel Check</Text>
+          </TouchableOpacity>
+        </CapabilityCard>
+
+        <CapabilityCard icon="ads-click" title="AdMob banner">
+          <Text style={[styles.bodyText, { color: colors.secondary }]}>
+            Google sample IDs are configured for Expo/EAS preview builds.
+          </Text>
+          <AdMobBanner />
+        </CapabilityCard>
+
+        <CapabilityCard icon="science" title="Testing and build readiness">
+          <View style={styles.metricGrid}>
+            <Metric label="Jest" value="Configured" />
+            <Metric label="Test Lab" value="Scripted" />
           </View>
           <View style={styles.metricGrid}>
-            <View style={styles.metric}>
-              <ThemedText style={styles.metricLabel}>Level</ThemedText>
-              <ThemedText style={styles.metricValue}>{battery ? `${battery.level}%` : '--'}</ThemedText>
-            </View>
-            <View style={styles.metric}>
-              <ThemedText style={styles.metricLabel}>Low power</ThemedText>
-              <ThemedText style={styles.metricValue}>{battery ? (battery.lowPowerMode ? 'On' : 'Off') : '--'}</ThemedText>
-            </View>
+            <Metric label="APK" value="EAS profile" />
+            <Metric label="Storage" value="SQLite" />
           </View>
-          <TouchableOpacity style={styles.secondaryButton} onPress={refreshBattery}>
-            <ThemedText style={styles.secondaryText}>Check Battery</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-
-        <ThemedView style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialIcons name="screen-rotation" size={22} color="#8B5CF6" />
-            <ThemedText type="defaultSemiBold">Accelerometer condition check</ThemedText>
-          </View>
-          <ThemedText style={styles.bodyText}>
-            Motion signal: {motion} · x {accel.x.toFixed(2)} · y {accel.y.toFixed(2)} · z {accel.z.toFixed(2)}
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedView style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialIcons name="notifications-active" size={22} color="#F59E0B" />
-            <ThemedText type="defaultSemiBold">Notification and Task Manager</ThemedText>
-          </View>
-          <ThemedText style={styles.bodyText}>
-            Background task: {taskStatus?.running ? 'Running' : 'Stopped'} · Registered: {taskStatus?.registered ? 'Yes' : 'No'}
-          </ThemedText>
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.secondaryButton} onPress={sendReminder}>
-              <ThemedText style={styles.secondaryText}>Send Reminder</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryButton} onPress={taskStatus?.running ? stopTask : startTask}>
-              <ThemedText style={styles.secondaryText}>{taskStatus?.running ? 'Stop Task' : 'Start Task'}</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </ThemedView>
-
-        <ThemedView style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialIcons name="hub" size={22} color="#0EA5E9" />
-            <ThemedText type="defaultSemiBold">Parallel readiness check</ThemedText>
-          </View>
-          <ThemedText style={styles.bodyText}>{parallelSummary}</ThemedText>
-          <TouchableOpacity style={styles.primaryButton} onPress={runParallel}>
-            <ThemedText style={styles.buttonText}>Run Parallel Check</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-
-        <ThemedView style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialIcons name="ads-click" size={22} color="#EF4444" />
-            <ThemedText type="defaultSemiBold">AdMob monetisation evidence</ThemedText>
-          </View>
-          <ThemedText style={styles.bodyText}>
-            Uses react-native-google-mobile-ads with Google sample IDs by default. This requires an EAS development or preview build, not Expo Go.
-          </ThemedText>
-          <AdMobBanner />
-        </ThemedView>
+        </CapabilityCard>
       </ScrollView>
-    </ParallaxScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  safeArea: {
     flex: 1,
   },
-  headerIcon: {
-    position: 'absolute',
-    right: 8,
-    bottom: -18,
-  },
   content: {
-    padding: 16,
-    gap: 12,
+    gap: 14,
+    padding: 20,
+    paddingBottom: 32,
   },
-  titleBlock: {
-    gap: 6,
+  hero: {
+    borderRadius: Radius.lg,
+    gap: 8,
+    padding: 18,
   },
-  subtitle: {
-    opacity: 0.78,
-    fontWeight: '700',
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    lineHeight: 27,
+  },
+  heroCopy: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 20,
+    opacity: 0.82,
   },
   notice: {
+    borderRadius: Radius.lg,
+    borderWidth: 1,
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#0A84FF18',
   },
   noticeText: {
-    fontWeight: '800',
-    color: '#0A84FF',
+    fontSize: 13,
+    fontWeight: '900',
   },
   card: {
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: '#00000010',
+    borderRadius: Radius.lg,
+    borderWidth: 1,
     gap: 12,
+    padding: 14,
   },
   cardHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cardIcon: {
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    height: 42,
+    justifyContent: 'center',
+    width: 42,
+  },
+  cardTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '900',
   },
   bodyText: {
-    opacity: 0.88,
-    lineHeight: 20,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 19,
   },
   metricGrid: {
     flexDirection: 'row',
     gap: 10,
   },
   metric: {
+    borderRadius: Radius.md,
     flex: 1,
-    borderRadius: 10,
-    padding: 12,
-    backgroundColor: '#FFFFFF66',
+    padding: 11,
   },
   metricLabel: {
-    fontSize: 12,
-    opacity: 0.72,
-    fontWeight: '800',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   metricValue: {
-    marginTop: 4,
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '900',
+    marginTop: 4,
   },
   primaryButton: {
-    height: 46,
-    borderRadius: 10,
-    backgroundColor: '#0A84FF',
     alignItems: 'center',
+    borderRadius: Radius.md,
+    height: 44,
     justifyContent: 'center',
   },
   buttonText: {
-    color: '#fff',
+    fontSize: 13,
     fontWeight: '900',
   },
   secondaryButton: {
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF90',
     alignItems: 'center',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    flex: 1,
+    height: 42,
     justifyContent: 'center',
-    paddingHorizontal: 14,
   },
   secondaryText: {
-    color: '#0F1720',
+    fontSize: 13,
     fontWeight: '900',
   },
   buttonRow: {

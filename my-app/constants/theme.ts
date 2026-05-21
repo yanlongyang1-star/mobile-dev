@@ -1,49 +1,92 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * UniLease visual system
+ * Campus-focused, bright, clear, and close to the Stitch reference.
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a84ff';
-const tintColorDark = '#0a84ff';
+/** Shared geometry — functional, not decorative */
+export const Radius = {
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+} as const;
+
+export const Brand = {
+  name: 'UniLease',
+  keywords: ['Verified', 'Campus', 'Fast', 'Secure'] as const,
+  tagline: 'Campus gear marketplace',
+} as const;
+
+const primaryBlue = '#185A7D';
+const softBlue = '#E2EDFF';
+const deepInk = '#132334';
 
 export const Colors = {
   light: {
-    text: '#0F1720',
-    background: '#F6F8FA',
-    surface: '#FFFFFF',
+    text: '#15202B',
+    background: '#F7FAFD',
+    surface: '#F1F5FA',
     card: '#FFFFFF',
-    tint: tintColorLight,
-    primary: tintColorLight,
-    secondary: '#475569',
-    icon: '#64748B',
-    tabIconDefault: '#94A3B8',
-    tabIconSelected: tintColorLight,
+    tint: primaryBlue,
+    primary: primaryBlue,
+    secondary: '#607084',
+    muted: '#8DA0B4',
+    border: '#E0E8F1',
+    accent: '#2C7DA0',
+    icon: '#5A7188',
+    tabIconDefault: '#7F91A5',
+    tabIconSelected: primaryBlue,
+    error: '#B91C1C',
+    errorSurface: '#FEF2F2',
+    errorBorder: '#FECACA',
+    gradientTop: '#F7FAFD',
+    gradientBottom: softBlue,
+    onPrimary: '#FFFFFF',
+    geometric: '#D9E7F7',
+    geometricMuted: '#EEF5FC',
+    hero: softBlue,
+    heroText: deepInk,
+    success: '#0E8F68',
+    warning: '#9A6B00',
   },
   dark: {
-    text: '#E6EEF3',
-    background: '#0B1113',
-    surface: '#0F1618',
-    card: '#0F1618',
-    tint: tintColorDark,
-    primary: tintColorDark,
-    secondary: '#94A3B8',
-    icon: '#9BA1A6',
-    tabIconDefault: '#7C8A94',
-    tabIconSelected: tintColorDark,
+    text: '#FAFAFA',
+    background: '#0C1620',
+    surface: '#142333',
+    card: '#101C28',
+    tint: '#FAFAFA',
+    primary: '#FAFAFA',
+    secondary: '#B8C4D2',
+    muted: '#7F91A5',
+    border: '#25384C',
+    accent: '#8EC5E7',
+    icon: '#8B949E',
+    tabIconDefault: '#6B7280',
+    tabIconSelected: '#FAFAFA',
+    error: '#F87171',
+    errorSurface: '#1F1414',
+    errorBorder: '#3D2020',
+    gradientTop: '#0C1620',
+    gradientBottom: '#142333',
+    onPrimary: '#0A0E14',
+    geometric: '#1E3347',
+    geometricMuted: '#243B52',
+    hero: '#18344D',
+    heroText: '#FAFAFA',
+    success: '#34D399',
+    warning: '#FBBF24',
   },
 };
 
+export type ThemeColors = (typeof Colors)['light'];
+
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
