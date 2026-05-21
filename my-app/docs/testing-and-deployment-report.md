@@ -14,6 +14,8 @@ Run tests with:
 npm run test
 ```
 
+For a requirement-by-requirement implementation matrix, see `docs/assessment-requirement-checklist.md`.
+
 ## Static Quality Checks
 
 Run:

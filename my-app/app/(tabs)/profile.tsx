@@ -70,15 +70,29 @@ export default function Profile() {
     }
   };
 
+  const goToLogin = async () => {
+    await signOut();
+    router.replace('/login');
+  };
+
   const onSignOut = async () => {
+    if (!user) {
+      await goToLogin();
+      return;
+    }
+
+    if (Platform.OS === 'web') {
+      await goToLogin();
+      return;
+    }
+
     Alert.alert('Confirm Sign Out', 'Are you sure you want to sign out of UniLease?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out',
         style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          router.replace('/login');
+        onPress: () => {
+          void goToLogin();
         },
       },
     ]);
@@ -198,7 +212,7 @@ export default function Profile() {
         </MinimalCard>
       ) : null}
 
-      <MinimalButton label="Sign Out" onPress={onSignOut} style={styles.signOutBtn} />
+        <MinimalButton label={user ? 'Sign Out' : 'Sign In'} onPress={onSignOut} style={styles.signOutBtn} />
       </ScrollView>
     </SafeAreaView>
   );

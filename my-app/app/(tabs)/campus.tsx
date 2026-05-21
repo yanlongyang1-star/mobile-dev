@@ -2,7 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Accelerometer } from 'expo-sensors';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AdMobBanner from '@/components/AdMobBanner';
@@ -105,6 +105,13 @@ export default function CampusScreen() {
     setBattery(result);
   };
 
+  const openCampusMap = async () => {
+    const zone = nearest?.granted ? nearest.nearest : CAMPUS_ZONES[0];
+    const url = `https://www.google.com/maps/search/?api=1&query=${zone.latitude},${zone.longitude}`;
+    await Linking.openURL(url);
+    setMessage(`Opening map for ${zone.name}.`);
+  };
+
   const runParallel = async () => {
     setMessage('Running checks in parallel...');
     const result = await runParallelReadinessCheck();
@@ -178,6 +185,15 @@ export default function CampusScreen() {
           )}
           <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={refreshLocation}>
             <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Refresh GPS</Text>
+          </TouchableOpacity>
+        </CapabilityCard>
+
+        <CapabilityCard icon="map" title="Campus map launcher">
+          <Text style={[styles.bodyText, { color: colors.secondary }]}>
+            Opens the selected handover zone in Google Maps. Uses the GPS result when available, otherwise Library Hub.
+          </Text>
+          <TouchableOpacity style={[styles.secondaryButton, { borderColor: colors.border }]} onPress={openCampusMap}>
+            <Text style={[styles.secondaryText, { color: colors.text }]}>Open Map</Text>
           </TouchableOpacity>
         </CapabilityCard>
 
