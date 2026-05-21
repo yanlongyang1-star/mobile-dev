@@ -169,11 +169,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 26,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 6,
   },
   logoCircle: {
     width: 80,
