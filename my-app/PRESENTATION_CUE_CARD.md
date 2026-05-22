@@ -137,6 +137,25 @@ Fill in **[brackets]** before you record. Open on a **second screen**.
 | Why client filter? | **Instant** UX; **server** still wins for **truth**. |
 | Secure Store safe? | **Encrypted** locally; treat as **temporary** secrets. |
 | Bypass **`bad-words`**? | **Yes** — it is **not** **security**. |
+| Why SQLite **and** Firestore? | **SQLite** = offline/restart reliability; **Firestore** = share data between students. |
+| Why Test Lab? | Real **APK** on **Google-hosted** devices — not just Expo Go on one phone. |
+
+---
+
+## Part 6 — Firebase pitch (~2:00 extra)
+
+**Visual:** Phone + **Firebase Console** (second tab or screenshots).
+
+| STEP | SAY |
+|------|-----|
+| Sign out → **Create an account** with a **university email**. | **Firebase Authentication** creates the account. We only allow domains in **`ALLOWED_UNI_DOMAINS`**. |
+| Show **verification alert**, then **Profile** → **Email verified**. | After sign-up we send a **verification email**. Profile can **resend** and **refresh** status. |
+| Firebase Console → **Authentication → Users**. | Live user record — proof **Auth** is integrated. |
+| Firestore → **`users/{uid}`** document. | **Cloud Firestore** stores profile: name, email, optional student ID, **`emailVerified`**. |
+| **Campus** → **parallel readiness** check. | **SQLite** keeps bookings offline; **Firestore** syncs shared data — merged on load. |
+| Test Lab screenshot. | **Firebase Test Lab** runs the **preview APK** on cloud Android devices (Robo test). |
+
+**Three Firebase technologies:** **Authentication** (identity), **Firestore** (shared data), **Test Lab** (device testing).
 
 ---
 
@@ -147,3 +166,4 @@ Fill in **[brackets]** before you record. Open on a **second screen**.
 - [ ] **Description** filled before **publish**  
 - [ ] Bad test word **typed** only  
 - [ ] After **block**, **clean** submit works  
+- [ ] **Firebase**: `.env` filled, sign-up works, **`users/{uid}`** in console  

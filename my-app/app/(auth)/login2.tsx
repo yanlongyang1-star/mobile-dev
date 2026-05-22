@@ -1,20 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Keyboard, KeyboardAvoidingView, Platform, Text, TextInput } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { Brand, Colors, Radius } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,6 +18,9 @@ export default function Login2Screen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const INPUT_BORDER = colors.secondary;
+  const PLACEHOLDER = colors.secondary;
 
   useEffect(() => {
     if (!step1Done) router.replace('/login');
@@ -55,204 +48,207 @@ export default function Login2Screen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-      <View style={[styles.page, { backgroundColor: colors.background }]}>
-        <View pointerEvents="none" style={[styles.geoBlock, styles.geoBlockA, { backgroundColor: colors.geometric }]} />
-        <View pointerEvents="none" style={[styles.geoAccent, { backgroundColor: colors.accent }]} />
-
-        <ScrollView contentContainerStyle={styles.container} scrollEnabled={false} keyboardShouldPersistTaps="handled">
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={[styles.logoBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <MaterialIcons name="verified" size={36} color={colors.text} />
-            </View>
-
-            <Text style={[styles.brandTitle, { color: colors.text }]}>{Brand.name}</Text>
-            <Text style={[styles.brandSubtitle, { color: colors.secondary }]}>Step 2 · Secure sign-in</Text>
-
-            <View style={styles.formSection}>
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.secondary }]}>Username</Text>
-                <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-                  <MaterialIcons name="person-outline" size={20} color={colors.icon} />
-                  <TextInput
-                    style={[styles.input, { color: colors.text }]}
-                    placeholder="your.name@university.edu"
-                    placeholderTextColor={colors.muted}
-                    value={username}
-                    onChangeText={(text) => {
-                      setUsername(text);
-                      setError('');
-                    }}
-                    autoCapitalize="none"
-                    editable={!authLoading}
-                    underlineColorAndroid="transparent"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
-                <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-                  <MaterialIcons name="lock-outline" size={20} color={colors.icon} />
-                  <TextInput
-                    style={[styles.input, { color: colors.text }]}
-                    placeholder="Password"
-                    placeholderTextColor={colors.muted}
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      setError('');
-                    }}
-                    secureTextEntry
-                    editable={!authLoading}
-                    underlineColorAndroid="transparent"
-                  />
-                </View>
-              </View>
-
-              {error ? (
-                <View style={[styles.errorBox, { backgroundColor: colors.errorSurface, borderColor: colors.errorBorder }]}>
-                  <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-                </View>
-              ) : null}
-
-              <TouchableOpacity
-                style={[styles.signInButton, { backgroundColor: colors.primary }]}
-                onPress={onLogin}
-                disabled={authLoading}
-                activeOpacity={0.9}>
-                {authLoading ? (
-                  <ActivityIndicator color={colors.onPrimary} />
-                ) : (
-                  <Text style={[styles.signInButtonText, { color: colors.onPrimary }]}>Sign In</Text>
-                )}
-              </TouchableOpacity>
-
-              <Text style={[styles.footerText, { color: colors.muted }]}>
-                {authMode === 'firebase' ? 'Complete Firebase sign in with the same university email.' : 'Demo: repeat student / unilease123.'}
-              </Text>
-            </View>
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]} scrollEnabled={false}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={[styles.logoCircle, { backgroundColor: `${colors.primary}22` }]}>
+            <MaterialIcons name="verified" size={44} color={colors.primary} />
           </View>
-        </ScrollView>
-      </View>
+
+          <Text style={[styles.brandTitle, { color: colors.text }]}>UniLease</Text>
+
+          <View style={styles.formSection}>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.secondary }]}>Username</Text>
+              <View style={[styles.inputContainer, { borderColor: INPUT_BORDER, backgroundColor: colors.surface }]}>
+                <MaterialIcons name="person" size={20} color={colors.primary} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="your.name@university.edu"
+                  placeholderTextColor={PLACEHOLDER}
+                  value={username}
+                  onChangeText={(text) => {
+                    setUsername(text);
+                    setError('');
+                  }}
+                  autoCapitalize="none"
+                  editable={!authLoading}
+                  underlineColorAndroid="transparent"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
+              <View style={[styles.inputContainer, { borderColor: INPUT_BORDER, backgroundColor: colors.surface }]}>
+                <MaterialIcons name="lock" size={20} color={colors.primary} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="your.name@university.edu"
+                  placeholderTextColor={PLACEHOLDER}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    setError('');
+                  }}
+                  secureTextEntry
+                  editable={!authLoading}
+                  underlineColorAndroid="transparent"
+                />
+              </View>
+            </View>
+
+            {error ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>⚠️ {error}</Text>
+              </View>
+            ) : null}
+
+            <TouchableOpacity
+              style={[styles.signInButton, { backgroundColor: colors.primary }]}
+              onPress={onLogin}
+              disabled={authLoading}
+              activeOpacity={0.9}
+            >
+              {authLoading ? <ActivityIndicator color="white" /> : <Text style={styles.signInButtonText}>Sign In</Text>}
+            </TouchableOpacity>
+
+            <Text style={[styles.footerText, { color: colors.secondary }]}>
+              {authMode === 'firebase' ? 'Complete Firebase sign in with the same university email.' : 'Demo: repeat student / unilease123.'}
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  page: {
-    flex: 1,
-    overflow: 'hidden',
-  },
   container: {
-    flexGrow: 1,
+    flex: 1,
     padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
-  geoBlock: {
+  bgBlobA: {
     position: 'absolute',
-    opacity: 0.6,
-  },
-  geoBlockA: {
-    width: 200,
-    height: 200,
+    width: 260,
+    height: 260,
+    borderRadius: 999,
+    backgroundColor: '#BDE4F5',
     top: 20,
-    left: -60,
-    transform: [{ rotate: '-12deg' }],
+    left: -80,
   },
-  geoAccent: {
+  bgBlobB: {
     position: 'absolute',
-    width: 100,
-    height: 4,
-    bottom: 100,
-    right: 28,
-    opacity: 0.45,
+    width: 220,
+    height: 220,
+    borderRadius: 999,
+    backgroundColor: '#8FD3EA',
+    bottom: 80,
+    right: -70,
+    opacity: 0.85,
+  },
+  bgBlobC: {
+    position: 'absolute',
+    width: 320,
+    height: 120,
+    borderRadius: 120,
+    backgroundColor: '#EAF9FF',
+    bottom: -10,
+    left: -20,
+    transform: [{ rotate: '-12deg' }],
   },
   card: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: Radius.md,
+    backgroundColor: '#FFFFFFE8',
+    borderWidth: 1,
+    borderColor: '#FFFFFFB2',
+    borderRadius: 18,
     padding: 26,
     alignItems: 'center',
-    borderWidth: 1,
   },
-  logoBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: Radius.sm,
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    borderWidth: 1,
   },
   brandTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '800',
     marginTop: 2,
     marginBottom: 4,
-    letterSpacing: -0.3,
+    color: '#111827',
   },
   brandSubtitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 20,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#64748B',
+    marginBottom: 18,
   },
   formSection: {
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '700',
+    color: '#6B7280',
     marginBottom: 8,
     paddingLeft: 2,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: Radius.md,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    height: 52,
+    height: 54,
+    backgroundColor: '#fff',
   },
   input: {
     flex: 1,
     fontSize: 16,
     paddingLeft: 10,
+    color: '#111827',
   },
   errorBox: {
-    borderRadius: Radius.md,
+    borderRadius: 10,
     padding: 12,
-    marginBottom: 14,
+    marginBottom: 16,
+    backgroundColor: '#FEE2E2',
     width: '100%',
-    borderWidth: 1,
   },
   errorText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#DC2626',
   },
   signInButton: {
-    height: 52,
-    borderRadius: Radius.md,
+    height: 56,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 6,
-    marginBottom: 16,
+    marginBottom: 18,
     width: '100%',
   },
   signInButtonText: {
+    color: 'white',
     fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    fontWeight: '900',
   },
   footerText: {
     textAlign: 'center',
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
   },
 });

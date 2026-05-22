@@ -22,10 +22,14 @@ export default function TabLayout() {
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 86 : 66,
           paddingTop: 6,
-          shadowColor: '#0F172A',
-          shadowOpacity: 0.08,
-          shadowRadius: 16,
-          elevation: 8,
+          ...(Platform.OS === 'web'
+            ? { boxShadow: '0 -8px 18px rgba(15, 23, 42, 0.08)' }
+            : {
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.08,
+                shadowRadius: 16,
+                elevation: 8,
+              }),
         },
         tabBarLabelStyle: {
           fontSize: 11,

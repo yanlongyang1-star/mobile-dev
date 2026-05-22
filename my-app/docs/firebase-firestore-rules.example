@@ -10,6 +10,15 @@ service cloud.firestore {
       return signedIn() && request.resource.data.borrowerUid == request.auth.uid;
     }
 
+    function ownsUserDoc(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if ownsUserDoc(userId);
+      allow create, update: if ownsUserDoc(userId);
+    }
+
     match /items/{itemId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.owner.uid == request.auth.uid;

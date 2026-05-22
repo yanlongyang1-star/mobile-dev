@@ -14,7 +14,7 @@ import {
 import { Link, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import { Colors, Radius } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -71,156 +71,121 @@ export default function SignUpScreen() {
     }
   };
 
-  const inputStyle = [
-    styles.input,
-    { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface },
-  ];
-
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-      <View style={[styles.page, { backgroundColor: colors.background }]}>
-        <View pointerEvents="none" style={[styles.geoBlock, styles.geoBlockA, { backgroundColor: colors.geometric }]} />
-        <View pointerEvents="none" style={[styles.geoAccent, { backgroundColor: colors.accent }]} />
-
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={[styles.logoBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <MaterialIcons name="verified-user" size={36} color={colors.text} />
-            </View>
-
-            <Text style={[styles.title, { color: colors.text }]}>Create Account</Text>
-            <Text style={[styles.subtitle, { color: colors.secondary }]}>
-              Secure registration · university email verification
-            </Text>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Display name</Text>
-              <TextInput style={inputStyle} value={displayName} onChangeText={setDisplayName} editable={!loading} />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>University email</Text>
-              <TextInput
-                style={inputStyle}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setError('');
-                }}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholder="name@students.latrobe.edu.au"
-                placeholderTextColor={colors.muted}
-                editable={!loading}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Student ID (optional)</Text>
-              <TextInput
-                style={inputStyle}
-                value={studentId}
-                onChangeText={(text) => {
-                  setStudentId(text);
-                  setError('');
-                }}
-                autoCapitalize="characters"
-                placeholder="e.g. 12345678"
-                placeholderTextColor={colors.muted}
-                editable={!loading}
-                maxLength={32}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
-              <TextInput
-                style={inputStyle}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setError('');
-                }}
-                secureTextEntry
-                placeholder="Minimum 6 characters"
-                placeholderTextColor={colors.muted}
-                editable={!loading}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Confirm password</Text>
-              <TextInput
-                style={inputStyle}
-                value={confirmPassword}
-                onChangeText={(text) => {
-                  setConfirmPassword(text);
-                  setError('');
-                }}
-                secureTextEntry
-                placeholder="Re-enter password"
-                placeholderTextColor={colors.muted}
-                editable={!loading}
-              />
-            </View>
-
-            {error ? (
-              <View style={[styles.errorBox, { backgroundColor: colors.errorSurface, borderColor: colors.errorBorder }]}>
-                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-              </View>
-            ) : null}
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: colors.primary }]}
-              onPress={onSubmit}
-              disabled={loading}>
-              <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
-                {loading ? 'Creating...' : 'Create Account'}
-              </Text>
-            </TouchableOpacity>
-
-            <Link href="/login" asChild>
-              <TouchableOpacity style={[styles.secondaryButton, { borderColor: colors.border }]}>
-                <Text style={[styles.secondaryText, { color: colors.text }]}>Back to Login</Text>
-              </TouchableOpacity>
-            </Link>
+      <ScrollView
+        contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={[styles.logoCircle, { backgroundColor: `${colors.primary}22` }]}>
+            <MaterialIcons name="school" size={42} color={colors.primary} />
           </View>
-        </ScrollView>
-      </View>
+
+          <Text style={[styles.title, { color: colors.text }]}>Create UniLease Account</Text>
+          <Text style={[styles.subtitle, { color: colors.secondary }]}>Firebase Authentication with university email validation</Text>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.secondary }]}>Display name</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
+              value={displayName}
+              onChangeText={setDisplayName}
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.secondary }]}>University email</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                setError('');
+              }}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholder="name@students.latrobe.edu.au"
+              placeholderTextColor="#9CA3AF"
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.secondary }]}>Student ID (optional)</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
+              value={studentId}
+              onChangeText={(text) => {
+                setStudentId(text);
+                setError('');
+              }}
+              autoCapitalize="characters"
+              placeholder="e.g. 12345678"
+              placeholderTextColor="#9CA3AF"
+              editable={!loading}
+              maxLength={32}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setError('');
+              }}
+              secureTextEntry
+              placeholder="Minimum 6 characters"
+              placeholderTextColor="#9CA3AF"
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.secondary }]}>Confirm password</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: '#D1D5DB', backgroundColor: colors.surface }]}
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                setError('');
+              }}
+              secureTextEntry
+              placeholder="Re-enter password"
+              placeholderTextColor="#9CA3AF"
+              editable={!loading}
+            />
+          </View>
+
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={onSubmit} disabled={loading}>
+            <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Create Account'}</Text>
+          </TouchableOpacity>
+
+          <Link href="/login" asChild>
+            <TouchableOpacity style={styles.secondaryButton}>
+              <Text style={[styles.secondaryText, { color: colors.primary }]}>Back to Login</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  page: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  geoBlock: {
-    position: 'absolute',
-    opacity: 0.6,
-  },
-  geoBlockA: {
-    width: 180,
-    height: 180,
-    top: 48,
-    left: -40,
-    transform: [{ rotate: '-10deg' }],
-  },
-  geoAccent: {
-    position: 'absolute',
-    width: 80,
-    height: 4,
-    top: 100,
-    right: 24,
-    opacity: 0.45,
-  },
   container: {
-    flexGrow: 1,
+    flex: 1,
     padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
@@ -228,80 +193,75 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 430,
-    borderRadius: Radius.md,
+    borderRadius: 18,
     padding: 24,
     borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  logoBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: Radius.sm,
+  logoCircle: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    borderWidth: 1,
   },
   title: {
     textAlign: 'center',
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.3,
+    fontSize: 26,
+    fontWeight: '900',
   },
   subtitle: {
     textAlign: 'center',
     marginTop: 6,
-    marginBottom: 20,
+    marginBottom: 18,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     lineHeight: 18,
   },
   inputGroup: {
     marginBottom: 14,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
     marginBottom: 6,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderRadius: Radius.md,
+    borderRadius: 12,
     paddingHorizontal: 12,
     fontSize: 15,
   },
   errorBox: {
-    borderRadius: Radius.md,
+    borderRadius: 10,
     padding: 12,
+    backgroundColor: '#FEE2E2',
     marginBottom: 14,
-    borderWidth: 1,
   },
   errorText: {
-    fontWeight: '600',
+    color: '#DC2626',
+    fontWeight: '800',
     fontSize: 13,
   },
   button: {
     height: 52,
-    borderRadius: Radius.md,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
+    color: '#fff',
     fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    fontWeight: '900',
   },
   secondaryButton: {
     alignItems: 'center',
     paddingVertical: 14,
-    marginTop: 8,
-    borderTopWidth: 1,
   },
   secondaryText: {
     fontWeight: '800',
-    fontSize: 13,
   },
 });
