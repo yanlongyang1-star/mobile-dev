@@ -46,3 +46,7 @@ npm run build:android:preview
 ```
 
 Upload the preview APK in Firebase **Test Lab** → Robo test → screenshot matrix + logs.
+
+## 6. Evidence checklist
+
+See **`docs/firebase-pitch-evidence.md`** for pitch rehearsal and screenshot list.

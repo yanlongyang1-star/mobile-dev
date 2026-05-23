@@ -31,8 +31,12 @@ Expected result: no TypeScript or lint errors.
 
 | Area | Test | Expected Result |
 | --- | --- | --- |
-| Login | Use demo credentials | User reaches main tabs |
-| Home | Search `calculator` | Calculator listing appears |
+| Firebase sign-up | Create account with `@students.latrobe.edu.au` | User reaches main tabs; **Authentication → Users** shows new user |
+| Firestore profile | After sign-up, open Firestore **Data** | **`users/{uid}`** document with email, displayName, emailVerified |
+| Email verification | Profile → Resend / Refresh after inbox link | **Email verified** becomes Yes; Firestore field updates |
+| Firebase login | Sign in with same university email | Reaches main tabs (Firebase mode, not demo) |
+| Login (demo fallback) | Without `.env`: `student` / `unilease123` | User reaches main tabs |
+| Browse | Search `calculator` | Calculator listing appears |
 | Item Details | Open listing | Details and request button appear |
 | Booking | Submit valid dates | Booking appears in Explore |
 | SQLite | Restart app after booking | Booking remains available |
@@ -41,6 +45,7 @@ Expected result: no TypeScript or lint errors.
 | Sensor | Move device on Campus screen | Motion signal updates |
 | Notification | Tap Send Reminder | Handover reminder appears after a few seconds |
 | Background task | Start/stop task | Task status changes |
+| Parallel readiness | Campus → run parallel check | SQLite + Firestore show **Ready** when configured |
 
 ## Firebase Test Lab Evidence
 
@@ -81,13 +86,25 @@ Submission should include:
 
 ## Limitations and Improvements
 
-The current implementation is assessment-ready as a strong prototype, but final submission evidence still needs:
+**Completed in prototype:**
 
-- real Firebase project values in `.env`
-- Firebase Authentication screenshots showing a university email account
-- Firestore screenshots showing synced listings, bookings, status updates and ratings
-- Firebase Test Lab run screenshots
-- APK/AAB build screenshots
+- Firebase project configured (`fir-config-6fa5c`) with local `.env` (not committed)
+- Email/password sign-up with university domain validation
+- Firestore `users/{uid}` profile on sign-up
+- Email verification flow in Profile (resend + refresh)
+
+**Still recommended for final submission evidence:**
+
+- Firestore screenshots for **listings**, **bookings**, status updates and ratings (after using those flows)
+- Firebase Test Lab run screenshots (see `firebase-test-lab-script.md`)
+- APK/AAB build screenshots and EAS build URL
 - GitHub and Azure DevOps contribution evidence
-- AdMob banner screenshot from EAS development or preview build
-- screenshots of the updated Stitch-style Home, Explore, Post, Campus and Profile screens
+- AdMob banner screenshot from EAS development or preview build (not Expo Go)
+- Screenshots of the updated Stitch-style Home, Explore, Post, Campus and Profile screens
+
+**Future improvements:**
+
+- Enforce verified email before booking
+- Server-side domain validation (Cloud Functions or campus SSO)
+- Full offline sync queue instead of simple SQLite/Firestore merge
+- Deeper Test Lab / instrumented tests beyond Robo smoke runs
