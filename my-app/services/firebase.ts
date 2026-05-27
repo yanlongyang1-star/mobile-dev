@@ -3,6 +3,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, initializeAuth } from 'firebase/auth';
 import * as FirebaseAuth from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const extra = (Constants.manifest as any)?.extra ?? (Constants.expoConfig as any)?.extra ?? {};
@@ -32,9 +33,10 @@ if (!firebaseConfig.apiKey) {
 // Export safe fallbacks when Firebase isn't initialized so consumers can handle nulls.
 let authInstance: ReturnType<typeof getAuth> | null = null;
 let dbInstance: ReturnType<typeof getFirestore> | null = null;
+let storageInstance: ReturnType<typeof getStorage> | null = null;
 
 try {
-  // Only call getAuth/getFirestore if the app was initialized
+  // Only call Firebase services if the app was initialized.
   if (app) {
     const getReactNativePersistence = (
       FirebaseAuth as typeof FirebaseAuth & {
@@ -44,8 +46,13 @@ try {
     const authOptions = getReactNativePersistence
       ? ({ persistence: getReactNativePersistence(AsyncStorage) } as Parameters<typeof initializeAuth>[1])
       : undefined;
-    authInstance = initializeAuth(app, authOptions);
+    try {
+      authInstance = initializeAuth(app, authOptions);
+    } catch {
+      authInstance = getAuth(app);
+    }
     dbInstance = getFirestore(app);
+    storageInstance = getStorage();
   }
 } catch (e) {
   // eslint-disable-next-line no-console
@@ -54,3 +61,4 @@ try {
 
 export const auth = authInstance;
 export const db = dbInstance;
+export const storage = storageInstance;

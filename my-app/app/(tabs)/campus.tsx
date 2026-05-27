@@ -116,9 +116,9 @@ export default function CampusScreen() {
     setMessage('Running checks in parallel...');
     const result = await runParallelReadinessCheck();
     setParallelSummary(
-      `Battery: ${statusText(result.battery)} · SQLite: ${statusText(result.localDb)} · Firebase: ${statusText(
+      `Battery: ${statusText(result.battery)} · SQLite: ${statusText(result.localDb)} · Firestore: ${statusText(
         result.firestore
-      )} · GPS: ${statusText(result.location)} · ${result.durationMs}ms`
+      )} · Storage: ${statusText(result.storage)} · GPS: ${statusText(result.location)} · ${result.durationMs}ms`
     );
     setMessage('Parallel readiness check completed.');
   };

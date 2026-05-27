@@ -75,6 +75,7 @@ export default function CreateListingScreen() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [listingPhotoUri, setListingPhotoUri] = useState<string | null>(null);
 
@@ -130,17 +131,26 @@ export default function CreateListingScreen() {
     }
 
     if (mode === 'rental') {
-      const item = await addListing({
-        title: itemTitle,
-        category,
-        condition,
-        campusLocation,
-        pricePerDay: positiveNumber(dailyPrice) ?? 0,
-        description,
-      });
-      if (!item) {
-        setSubmitError('Please sign in before publishing a listing.');
+      try {
+        setSubmitting(true);
+        const item = await addListing({
+          title: itemTitle,
+          category,
+          condition,
+          campusLocation,
+          pricePerDay: positiveNumber(dailyPrice) ?? 0,
+          description,
+          photoUri: listingPhotoUri,
+        });
+        if (!item) {
+          setSubmitError('Please sign in before publishing a listing.');
+          return;
+        }
+      } catch (error) {
+        setSubmitError(error instanceof Error ? error.message : 'Could not upload listing photo.');
         return;
+      } finally {
+        setSubmitting(false);
       }
     }
 
@@ -301,7 +311,7 @@ export default function CreateListingScreen() {
                   {listingPhotoUri ? 'Photo selected' : 'Add from gallery'}
                 </Text>
                 <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
-                  iOS/Android photo picker
+                  Uploaded to Firebase Storage when you publish
                 </Text>
               </View>
               <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
@@ -394,8 +404,15 @@ export default function CreateListingScreen() {
           </View>
         </View>
 
-        <TouchableOpacity activeOpacity={0.9} style={[styles.submitBtn, { backgroundColor: colors.primary }]} onPress={onSubmit}>
-          <Text style={[styles.submitBtnText, { color: colors.onPrimary }]}>{submitLabel}</Text>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={[styles.submitBtn, { backgroundColor: colors.primary, opacity: submitting ? 0.7 : 1 }]}
+          onPress={onSubmit}
+          disabled={submitting}
+        >
+          <Text style={[styles.submitBtnText, { color: colors.onPrimary }]}>
+            {submitting ? 'Uploading photo…' : submitLabel}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

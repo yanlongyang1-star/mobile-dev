@@ -14,15 +14,15 @@ import {
   View,
 } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, Colors, Radius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const colors = useThemeColors();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const {
     authMode,
     completeSignIn,
@@ -101,302 +101,313 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-      <SafeAreaView style={[styles.page, { backgroundColor: colors.background }]}>
+      <View style={[styles.page, { backgroundColor: colors.background }]}>
+        <View pointerEvents="none" style={[styles.geoBlock, styles.geoBlockA, { backgroundColor: colors.geometric }]} />
+        <View pointerEvents="none" style={[styles.geoBlock, styles.geoBlockB, { backgroundColor: colors.geometricMuted }]} />
+        <View pointerEvents="none" style={[styles.geoAccent, { backgroundColor: colors.accent }]} />
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.brandHeader}>
-            <View style={[styles.logoButton, { backgroundColor: colors.surface }]}>
-              <MaterialIcons name="school" size={26} color={colors.primary} />
-            </View>
-            <View style={styles.brandText}>
-              <Text style={[styles.brandTitle, { color: colors.primary }]}>{Brand.name}</Text>
-              <Text style={[styles.brandSubtitle, { color: colors.secondary }]}>{Brand.tagline}</Text>
-            </View>
-          </View>
-
-          <View style={[styles.hero, { backgroundColor: colors.hero }]}>
-            <Text style={[styles.heroTitle, { color: colors.heroText }]}>Welcome back to UniLease.</Text>
-            <Text style={[styles.heroCopy, { color: colors.heroText }]}>
-              Sign in to browse campus gear, manage bookings, and post items for other verified students.
-            </Text>
-          </View>
-
+          showsVerticalScrollIndicator={false}>
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.logoBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <MaterialIcons name="shield" size={36} color={colors.text} />
+            </View>
+
+            <Text style={[styles.brandTitle, { color: colors.text }]}>{Brand.name}</Text>
+            <Text style={[styles.brandSubtitle, { color: colors.secondary }]}>{Brand.tagline}</Text>
             <View style={styles.keywordRow}>
               {Brand.keywords.map((word) => (
-                <View key={word} style={[styles.keywordChip, { backgroundColor: colors.surface }]}>
-                  <Text style={[styles.keywordText, { color: colors.secondary }]}>{word}</Text>
+                <View key={word} style={[styles.keywordChip, { borderColor: colors.border }]}>
+                  <Text style={[styles.keywordText, { color: colors.muted }]}>{word}</Text>
                 </View>
               ))}
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Username</Text>
-              <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <MaterialIcons name="person-outline" size={20} color={colors.primary} />
-                <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder={authMode === 'firebase' ? 'your.name@university.edu' : 'student'}
-                  placeholderTextColor={colors.muted}
-                  value={username}
-                  onChangeText={(text) => {
-                    setUsername(text);
-                    setError('');
-                  }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!authLoading}
-                  underlineColorAndroid="transparent"
-                />
+            <View style={styles.formSection}>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: colors.secondary }]}>Username</Text>
+                <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <MaterialIcons name="person-outline" size={20} color={colors.icon} />
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder={authMode === 'firebase' ? 'your.name@university.edu' : 'student'}
+                    placeholderTextColor={colors.muted}
+                    value={username}
+                    onChangeText={(text) => {
+                      setUsername(text);
+                      setError('');
+                    }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!authLoading}
+                    underlineColorAndroid="transparent"
+                  />
+                </View>
               </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
-              <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <MaterialIcons name="lock-outline" size={20} color={colors.primary} />
-                <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder={authMode === 'firebase' ? 'Firebase password' : 'unilease123'}
-                  placeholderTextColor={colors.muted}
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    setError('');
-                  }}
-                  secureTextEntry
-                  editable={!authLoading}
-                  underlineColorAndroid="transparent"
-                />
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: colors.secondary }]}>Password</Text>
+                <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <MaterialIcons name="lock-outline" size={20} color={colors.icon} />
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder={authMode === 'firebase' ? 'Firebase password' : 'unilease123'}
+                    placeholderTextColor={colors.muted}
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setError('');
+                    }}
+                    secureTextEntry
+                    editable={!authLoading}
+                    underlineColorAndroid="transparent"
+                  />
+                </View>
               </View>
-            </View>
 
-            {error ? (
-              <View style={[styles.errorBox, { backgroundColor: colors.errorSurface, borderColor: colors.errorBorder }]}>
-                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-              </View>
-            ) : null}
+              {error ? (
+                <View style={[styles.errorBox, { backgroundColor: colors.errorSurface, borderColor: colors.errorBorder }]}>
+                  <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                </View>
+              ) : null}
 
-            <TouchableOpacity
-              style={[styles.signInButton, { backgroundColor: colors.primary }]}
-              onPress={() => void onLogin()}
-              disabled={authLoading}
-              activeOpacity={0.92}
-            >
-              {authLoading ? (
-                <ActivityIndicator color={colors.onPrimary} />
-              ) : (
-                <Text style={[styles.signInButtonText, { color: colors.onPrimary }]}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-
-            {showBiometricShortcut ? (
               <TouchableOpacity
-                style={[styles.bioRow, { borderColor: colors.border }]}
-                onPress={() => void onBiometricLogin()}
-                disabled={authLoading || bioBusy}
-                activeOpacity={0.85}
-              >
-                <MaterialIcons name="fingerprint" size={25} color={colors.primary} />
-                <Text style={[styles.bioRowText, { color: colors.text }]}>Sign in with {bioLabel}</Text>
-                {bioBusy ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
+                style={[styles.signInButton, { backgroundColor: colors.primary }]}
+                onPress={() => void onLogin()}
+                disabled={authLoading}
+                activeOpacity={0.92}>
+                {authLoading ? (
+                  <ActivityIndicator color={colors.onPrimary} />
                 ) : (
-                  <MaterialIcons name="chevron-right" size={22} color={colors.icon} />
+                  <Text style={[styles.signInButtonText, { color: colors.onPrimary }]}>Sign In</Text>
                 )}
               </TouchableOpacity>
-            ) : null}
 
-            <Text style={[styles.footerText, { color: colors.secondary }]}>
-              {authMode === 'firebase'
-                ? 'Firebase mode: use your university email.'
-                : 'Demo login: student / unilease123.'}
-              {Platform.OS !== 'web'
-                ? ' On devices with Face ID, Touch ID, or fingerprint set up in Settings, UniLease confirms with a system security prompt before signing you in.'
-                : ''}
-            </Text>
+              {showBiometricShortcut ? (
+                <TouchableOpacity
+                  style={[styles.bioRow, { borderColor: colors.border }]}
+                  onPress={() => void onBiometricLogin()}
+                  disabled={authLoading || bioBusy}
+                  activeOpacity={0.85}>
+                  <MaterialIcons name="fingerprint" size={24} color={colors.text} />
+                  <Text style={[styles.bioRowText, { color: colors.text }]}>Sign in with {bioLabel}</Text>
+                  {bioBusy ? (
+                    <ActivityIndicator size="small" color={colors.text} />
+                  ) : (
+                    <MaterialIcons name="chevron-right" size={22} color={colors.muted} />
+                  )}
+                </TouchableOpacity>
+              ) : null}
 
-            {authMode === 'firebase' ? (
-              <Text style={[styles.footerText, { color: colors.secondary, marginTop: 8 }]}>
-                New to UniLease? Create an account with your university email below.
+              <Text style={[styles.footerText, { color: colors.muted }]}>
+                {authMode === 'firebase'
+                  ? 'Firebase mode: use your university email.'
+                  : 'Demo login: student / unilease123.'}
+                {Platform.OS !== 'web'
+                  ? ' On devices with Face ID, Touch ID, or fingerprint set up in Settings, UniLease confirms with an Apple/Google security prompt before signing you in.'
+                  : ''}
               </Text>
-            ) : (
-              <Text style={[styles.footerText, { color: colors.secondary, marginTop: 8 }]}>
-                Demo mode: add FIREBASE_* in <Text style={{ color: colors.text, fontWeight: '900' }}>.env</Text> to enable real sign up.
-                You can still open the sign-up screen to preview the form.
-              </Text>
-            )}
 
-            <TouchableOpacity
-              style={[styles.createAccountButton, { borderTopColor: colors.border }]}
-              onPress={() => router.push('/signup')}
-              disabled={authLoading}
-              activeOpacity={0.88}
-            >
-              <Text style={[styles.createAccountText, { color: colors.primary }]}>Create an account</Text>
-            </TouchableOpacity>
+              {authMode === 'firebase' ? (
+                <Text style={[styles.footerText, { marginTop: 8, color: colors.muted }]}>
+                  New to UniLease? Create an account with your university email below.
+                </Text>
+              ) : (
+                <Text style={[styles.footerText, { marginTop: 8, color: colors.muted }]}>
+                  Demo mode: add FIREBASE_* in <Text style={{ fontWeight: '700', color: colors.text }}>.env</Text> to enable real sign up.
+                  You can still open the sign-up screen to preview the form.
+                </Text>
+              )}
+
+              <TouchableOpacity
+                style={[styles.createAccountButton, { borderColor: colors.border }]}
+                onPress={() => router.push('/signup')}
+                disabled={authLoading}
+                activeOpacity={0.88}>
+                <Text style={[styles.createAccountText, { color: colors.text }]}>Create an account</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
+  flex: { flex: 1 },
   page: {
     flex: 1,
+    overflow: 'hidden',
   },
   scrollContent: {
     flexGrow: 1,
-    gap: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
     justifyContent: 'center',
-    padding: 20,
-    paddingBottom: 36,
-  },
-  brandHeader: {
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: 14,
   },
-  logoButton: {
-    alignItems: 'center',
-    borderRadius: Radius.lg,
-    height: 52,
-    justifyContent: 'center',
-    width: 52,
+  geoBlock: {
+    position: 'absolute',
+    opacity: 0.65,
   },
-  brandText: {
-    flex: 1,
+  geoBlockA: {
+    width: 200,
+    height: 200,
+    top: -24,
+    right: -48,
+    transform: [{ rotate: '12deg' }],
   },
-  brandTitle: {
-    fontSize: 30,
-    fontWeight: '900',
-    lineHeight: 34,
+  geoBlockB: {
+    width: 160,
+    height: 280,
+    bottom: 40,
+    left: -56,
+    transform: [{ rotate: '-8deg' }],
   },
-  brandSubtitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    marginTop: 1,
-  },
-  hero: {
-    borderRadius: Radius.lg,
-    gap: 8,
-    padding: 18,
-  },
-  heroTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    lineHeight: 27,
-  },
-  heroCopy: {
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 20,
-    opacity: 0.82,
+  geoAccent: {
+    position: 'absolute',
+    width: 120,
+    height: 4,
+    bottom: 120,
+    right: 32,
+    opacity: 0.5,
   },
   card: {
-    borderRadius: Radius.lg,
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: Radius.md,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 26,
+    alignItems: 'center',
     borderWidth: 1,
-    padding: 16,
+  },
+  logoBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: Radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  brandTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  brandSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
+    marginBottom: 12,
   },
   keywordRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 18,
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 20,
   },
   keywordChip: {
-    borderRadius: Radius.md,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: Radius.sm,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
   },
   keywordText: {
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.3,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
+  formSection: {
+    width: '100%',
+  },
   inputGroup: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.3,
-    marginBottom: 7,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+    paddingLeft: 2,
+    letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
   inputContainer: {
-    alignItems: 'center',
-    borderRadius: Radius.md,
-    borderWidth: 1,
     flexDirection: 'row',
-    height: 50,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: Radius.md,
     paddingHorizontal: 14,
+    height: 52,
   },
   input: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
     paddingLeft: 12,
   },
   errorBox: {
     borderRadius: Radius.md,
-    borderWidth: 1,
-    marginBottom: 14,
     padding: 12,
+    marginBottom: 14,
+    width: '100%',
+    borderWidth: 1,
   },
   errorText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   signInButton: {
-    alignItems: 'center',
-    borderRadius: Radius.lg,
     height: 52,
+    borderRadius: Radius.md,
     justifyContent: 'center',
-    marginTop: 2,
+    alignItems: 'center',
+    marginTop: 4,
+    width: '100%',
   },
   signInButtonText: {
-    fontSize: 15,
-    fontWeight: '900',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   bioRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 14,
+    marginBottom: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 10,
     borderRadius: Radius.md,
     borderWidth: 1,
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
   },
   bioRowText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   footerText: {
-    fontSize: 12,
-    fontWeight: '700',
-    lineHeight: 18,
-    marginTop: 16,
     textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 16,
+    lineHeight: 18,
   },
   createAccountButton: {
     alignItems: 'center',
-    borderTopWidth: 1,
     marginTop: 14,
-    paddingTop: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    width: '100%',
   },
   createAccountText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '800',
+    letterSpacing: 0.2,
   },
 });
