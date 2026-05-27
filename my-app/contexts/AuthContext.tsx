@@ -149,7 +149,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (authMode === 'firebase') {
           if (!u || !p || !isAllowedUniversityEmail(u)) return 'invalid_credentials';
-          const firebaseUser = await signIn(u, p);
+          const firebaseUser = await signIn(u, p).catch(() => null);
+          if (!firebaseUser) return 'invalid_credentials';
           setUser(mapFirebaseUserToUniLease(firebaseUser));
           setStep1Done(true);
           setStep1Email(u);
@@ -211,7 +212,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const p = normalize(password);
         if (authMode === 'firebase') {
           if (!step1Email || u !== step1Email) return false;
-          const firebaseUser = await signIn(u, p);
+          const firebaseUser = await signIn(u, p).catch(() => null);
+          if (!firebaseUser) return false;
           setUser(mapFirebaseUserToUniLease(firebaseUser));
           return true;
         }
@@ -307,6 +309,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!u) throw new Error('You are not signed in.');
     await resendVerificationEmail(u);
   }, [authMode]);
+
+
+  
 
   const value = useMemo<AuthContextValue>(() => {
     return {

@@ -69,7 +69,7 @@ export default function LoginScreen() {
     if (outcome === 'invalid_credentials') {
       setError(
         authMode === 'firebase'
-          ? 'Use an approved university email and your Firebase password.'
+          ? 'Incorrect email or password.'
           : 'Invalid login. Use username: student and password: unilease123'
       );
       return;

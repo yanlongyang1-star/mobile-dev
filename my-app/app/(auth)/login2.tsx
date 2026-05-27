@@ -38,7 +38,7 @@ export default function Login2Screen() {
     if (!ok) {
       setError(
         authMode === 'firebase'
-          ? 'Firebase sign in failed. Check email, password, and allowed university domain.'
+          ? 'Incorrect email or password.'
           : 'Invalid login. Use username: student and password: unilease123'
       );
       return;

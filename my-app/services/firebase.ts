@@ -1,8 +1,10 @@
 import Constants from 'expo-constants';
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, initializeAuth } from 'firebase/auth';
+import * as FirebaseAuth from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const extra = (Constants.manifest as any)?.extra ?? (Constants.expoConfig as any)?.extra ?? {};
 
 const firebaseConfig = {
@@ -13,19 +15,17 @@ const firebaseConfig = {
   messagingSenderId: extra.FIREBASE_MESSAGING_SENDER_ID,
   appId: extra.FIREBASE_APP_ID,
 };
-
+let app: ReturnType<typeof initializeApp> | null = null;
 if (!firebaseConfig.apiKey) {
   // If API key missing, skip initialization so the app can run with local placeholder data.
   // eslint-disable-next-line no-console
   console.warn('Firebase API key not found. Configure FIREBASE_* vars in app config to enable Firebase.');
 } else {
-  if (!getApps().length) {
-    try {
-      initializeApp(firebaseConfig as any);
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('Firebase initialization error', e);
-    }
+  try {
+    app = getApps()[0] ?? initializeApp(firebaseConfig as any);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('Firebase initialization error', e);
   }
 }
 
@@ -35,9 +35,17 @@ let dbInstance: ReturnType<typeof getFirestore> | null = null;
 
 try {
   // Only call getAuth/getFirestore if the app was initialized
-  if (getApps().length) {
-    authInstance = getAuth();
-    dbInstance = getFirestore();
+  if (app) {
+    const getReactNativePersistence = (
+      FirebaseAuth as typeof FirebaseAuth & {
+        getReactNativePersistence?: (storage: typeof AsyncStorage) => unknown;
+      }
+    ).getReactNativePersistence;
+    const authOptions = getReactNativePersistence
+      ? ({ persistence: getReactNativePersistence(AsyncStorage) } as Parameters<typeof initializeAuth>[1])
+      : undefined;
+    authInstance = initializeAuth(app, authOptions);
+    dbInstance = getFirestore(app);
   }
 } catch (e) {
   // eslint-disable-next-line no-console
