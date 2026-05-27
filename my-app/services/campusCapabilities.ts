@@ -2,6 +2,7 @@ import * as Battery from 'expo-battery';
 import * as Location from 'expo-location';
 import { getFirestoreHealth } from './firestore';
 import { getLocalHealth, recordAppEvent } from './localDatabase';
+import { getStorageHealth } from './storage';
 
 export type CampusZone = {
   name: string;
@@ -70,10 +71,11 @@ export async function getBatterySnapshot() {
 
 export async function runParallelReadinessCheck() {
   const startedAt = Date.now();
-  const [battery, localDb, firestore, location] = await Promise.allSettled([
+  const [battery, localDb, firestore, storage, location] = await Promise.allSettled([
     getBatterySnapshot(),
     getLocalHealth(),
     getFirestoreHealth(),
+    getStorageHealth(),
     getNearestCampusZone(),
   ]);
 
@@ -82,6 +84,7 @@ export async function runParallelReadinessCheck() {
     battery,
     localDb,
     firestore,
+    storage,
     location,
   };
   await recordAppEvent('parallel_readiness_check', { durationMs: result.durationMs });

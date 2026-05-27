@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const extra = (Constants.manifest as any)?.extra ?? (Constants.expoConfig as any)?.extra ?? {};
 
@@ -32,12 +33,14 @@ if (!firebaseConfig.apiKey) {
 // Export safe fallbacks when Firebase isn't initialized so consumers can handle nulls.
 let authInstance: ReturnType<typeof getAuth> | null = null;
 let dbInstance: ReturnType<typeof getFirestore> | null = null;
+let storageInstance: ReturnType<typeof getStorage> | null = null;
 
 try {
-  // Only call getAuth/getFirestore if the app was initialized
+  // Only call getAuth/getFirestore/getStorage if the app was initialized
   if (getApps().length) {
     authInstance = getAuth();
     dbInstance = getFirestore();
+    storageInstance = getStorage();
   }
 } catch (e) {
   // eslint-disable-next-line no-console
@@ -46,3 +49,4 @@ try {
 
 export const auth = authInstance;
 export const db = dbInstance;
+export const storage = storageInstance;

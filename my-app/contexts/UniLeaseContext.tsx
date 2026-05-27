@@ -10,6 +10,7 @@ import {
   saveRatingToFirestore,
   updateBookingStatusInFirestore,
 } from '@/services/firestore';
+import { getDefaultListingImageUrl, uploadListingImage } from '@/services/storage';
 import { loadBookingsForUser, saveBookingsForUser } from '@/services/localDatabase';
 
 export type UniLeaseBookingStatus = 'pending' | 'approved' | 'picked_up' | 'returned';
@@ -49,6 +50,7 @@ type UniLeaseContextValue = {
     campusLocation: string;
     pricePerDay: number;
     description?: string;
+    photoUri?: string | null;
   }) => Promise<UniLeaseItem | null>;
 
   bookings: UniLeaseBooking[];
@@ -199,6 +201,16 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
       addListing: async (params) => {
         if (!meUid || !user) return null;
         const id = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        let imageUrl = getDefaultListingImageUrl();
+        if (params.photoUri) {
+          const upload = await uploadListingImage(params.photoUri, meUid, id);
+          if (!upload.ok) {
+            throw new Error(upload.reason);
+          }
+          imageUrl = upload.downloadUrl;
+        }
+
         const item: UniLeaseItem = {
           id,
           title: params.title.trim(),
@@ -209,8 +221,7 @@ export function UniLeaseProvider({ children }: { children: React.ReactNode }) {
           pricePerDay: params.pricePerDay,
           location: params.campusLocation,
           condition: params.condition,
-          imageUrl:
-            'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80',
+          imageUrl,
           badge: 'New',
           owner: {
             uid: meUid,
