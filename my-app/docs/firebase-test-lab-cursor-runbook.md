@@ -7,7 +7,7 @@ This is the exact workflow to run in Cursor Terminal for the Assessment 4 Fireba
 - `eas.json` has Android APK build profiles.
 - `package.json` has Test Lab build commands.
 - Jest, TypeScript, and lint checks are already passing locally.
-- No APK/AAB artifact exists yet. Firebase Test Lab needs an APK/AAB built first.
+- EAS APK build and Firebase Test Lab evidence have now been completed for Assessment 4.
 
 ## 1. Pre-flight check
 
@@ -22,6 +22,8 @@ Expected result:
 - TypeScript: no errors
 - Expo lint: no errors
 - Jest: 6 test suites passed, 12 tests passed
+
+Actual result on 01/06/2026: passed.
 
 ## 2. Log in to Expo / EAS
 
@@ -55,6 +57,11 @@ npm run build:android:production-apk
 
 Both commands create an Android APK profile suitable for Firebase Test Lab Robo testing.
 
+Actual EAS build used for Test Lab:
+
+- Build URL: <https://expo.dev/accounts/qgdr-03/projects/my-app/builds/6e8dc1d0-affd-4889-825d-b49a0c949d0f>
+- APK artifact: <https://expo.dev/artifacts/eas/eDN99fdcELQRnzbNmcrnSP.apk>
+
 ## 4. Download APK
 
 When EAS finishes:
@@ -66,6 +73,8 @@ When EAS finishes:
 ```text
 artifacts/testlab/UniLease-testlab.apk
 ```
+
+Actual local APK copy: `artifacts/testlab/UniLease-testlab.apk`.
 
 ## 5. Upload to Firebase Test Lab
 
@@ -80,19 +89,24 @@ artifacts/testlab/UniLease-testlab.apk
 
 ## 6. Device split for group evidence
 
-| Student | Device | Android | Focus |
-| --- | --- | --- | --- |
-| San CHIHUN | Pixel 5 | Android 13 | Firebase readiness, Campus tools, permissions |
-| Yanlong Yang | Pixel 7 | Android 14 | Login, browse, item detail, booking flow |
+| Student | Device | Android/API | Focus | Result |
+| --- | --- | --- | --- | --- |
+| San CHIHUN (22162424) | Pixel 5 | Android 11 / API 30 | Firebase readiness, Campus tools, permissions | Passed |
+| Yanlong Yang (22519263) | Pixel 7 | Android 13 / API 33 | Login, browse, item detail, booking flow | Passed |
+
+Firebase Test Lab matrix links:
+
+- San: <https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/6349751831038791453>
+- Yanlong: <https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/7703526244991464826>
 
 ## 7. Screenshots to submit
 
-- EAS successful build page.
-- APK download link/button.
-- Firebase Test Lab test matrix.
-- Device model and Android version.
-- Logs tab.
-- Robo screenshots or video.
+- EAS successful build page: captured through the EAS build URL above.
+- APK download link/button: captured through the APK artifact URL above.
+- Firebase Test Lab test matrix: `artifacts/testlab/san-pixel5-matrix.png`, `artifacts/testlab/yanlong-pixel7-matrix.png`.
+- Device model and Android/API version: shown in each matrix screenshot.
+- Logs tab: `artifacts/testlab/san-pixel5-logs.png`, `artifacts/testlab/yanlong-pixel7-logs.png`.
+- Robo screenshots/video evidence: `artifacts/testlab/san-pixel5-robo-screenshots.png`, `artifacts/testlab/yanlong-pixel7-robo-screenshots.png`.
 
 ## 8. Report wording
 

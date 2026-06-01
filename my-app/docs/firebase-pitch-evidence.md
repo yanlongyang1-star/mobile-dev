@@ -26,9 +26,9 @@ Plus **SQLite** on device (not Firebase) for offline booking reliability.
 - [ ] Firestore `users/{uid}` (done if you signed up successfully)
 - [ ] Authentication user list
 - [ ] Profile showing email verified (before and after link)
-- [ ] Test Lab device matrix + pass/fail for San CHIHUN on Pixel 5 / Android 13
-- [ ] Test Lab device matrix + pass/fail for Yanlong Yang on Pixel 7 / Android 14
-- [ ] EAS APK build success page
+- [x] Test Lab device matrix + pass/fail for San CHIHUN on Pixel 5 / Android 11 / API 30
+- [x] Test Lab device matrix + pass/fail for Yanlong Yang on Pixel 7 / Android 13 / API 33
+- [x] EAS APK build URL and APK artifact link
 
 ## Why each technology (short)
 
@@ -47,4 +47,10 @@ Plus **SQLite** on device (not Firebase) for offline booking reliability.
 
 ## Evidence already working
 
-If Firestore shows **`users`** with your La Trobe email, **Authentication + Firestore sign-up is proven**. Next gap is usually **Test Lab screenshots** and **listings/bookings** in Firestore after you use those features.
+If Firestore shows **`users`** with your La Trobe email, **Authentication + Firestore sign-up is proven**. Test Lab screenshots are now captured in `artifacts/testlab`; the remaining evidence gap is usually **listings/bookings** in Firestore after you use those features.
+
+## Test Lab evidence now completed
+
+- San CHIHUN (22162424): Pixel 5, Android 11/API 30, `matrix-13tabm0a7ljgk`, passed.
+- Yanlong Yang (22519263): Pixel 7, Android 13/API 33, `matrix-dul5xpu8e4ofa`, passed.
+- EAS APK build: <https://expo.dev/accounts/qgdr-03/projects/my-app/builds/6e8dc1d0-affd-4889-825d-b49a0c949d0f>

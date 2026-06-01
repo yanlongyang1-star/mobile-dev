@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Capture **Assessment 4** evidence for **Firebase Test Lab** (third Firebase technology alongside Authentication and Firestore). San CHIHUN and Yanlong Yang should run **different devices** and attach screenshots/logs to the testing report.
+Capture **Assessment 4** evidence for **Firebase Test Lab** (third Firebase technology alongside Authentication and Firestore). San CHIHUN and Yanlong Yang ran **different devices** and saved screenshots/logs for the testing report.
 
 **Project:** `firebaseConfig` (`fir-config-6fa5c`) in Firebase Console.
 
@@ -23,6 +23,11 @@ npm run build:android:production-apk
 
 Download the **APK** from the EAS build page when the build finishes. Save the APK and screenshots under `artifacts/testlab/`.
 
+Actual build used:
+
+- EAS build: <https://expo.dev/accounts/qgdr-03/projects/my-app/builds/6e8dc1d0-affd-4889-825d-b49a0c949d0f>
+- APK artifact: <https://expo.dev/artifacts/eas/eDN99fdcELQRnzbNmcrnSP.apk>
+
 ## Test Lab run (Console)
 
 1. [Firebase Console](https://console.firebase.google.com/) → project **`firebaseConfig`**
@@ -40,12 +45,17 @@ Download the **APK** from the EAS build page when the build finishes. Save the A
 - Robo **screenshots or video** if generated
 - Short reflection: what passed, what Robo could not cover (e.g. real email verification)
 
-## Suggested device split
+## Completed device split
 
-| Student | Device | Android | Focus flows |
-| --- | --- | --- | --- |
-| San CHIHUN (22162424) | Pixel 5 | 13 | Campus readiness, permissions, Firebase status |
-| Yanlong Yang (22519263) | Pixel 7 | 14 | Login, browse listings, item detail, booking request |
+| Student | Device | Android/API | Focus flows | Result |
+| --- | --- | --- | --- | --- |
+| San CHIHUN (22162424) | Pixel 5 | Android 11 / API 30 | Campus readiness, permissions, Firebase status | Passed |
+| Yanlong Yang (22519263) | Pixel 7 | Android 13 / API 33 | Login, browse listings, item detail, booking request | Passed |
+
+Matrix links:
+
+- San: <https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/6349751831038791453>
+- Yanlong: <https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/7703526244991464826>
 
 ## Notes for report
 

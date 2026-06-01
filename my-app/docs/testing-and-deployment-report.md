@@ -52,24 +52,25 @@ Expected result: no TypeScript or lint errors.
 
 ## Firebase Test Lab Evidence
 
-Each student should run a different device configuration in Firebase Test Lab and include screenshots/logs. The app needs an EAS-built Android APK before Firebase Test Lab can run.
+The app was built into a standalone Android APK with EAS and uploaded to Firebase Test Lab. Both students used a different Google-hosted Android device configuration for Robo testing.
 
-Suggested split:
+| Owner | Device | Android/API | Matrix | Result | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| San CHIHUN (22162424) | Pixel 5 | Android 11 / API 30 | [`matrix-13tabm0a7ljgk`](https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/6349751831038791453) | Passed, 0 failed / 1 passed / 1 total device | `artifacts/testlab/san-pixel5-matrix.png`, `artifacts/testlab/san-pixel5-logs.png`, `artifacts/testlab/san-pixel5-robo-screenshots.png` |
+| Yanlong Yang (22519263) | Pixel 7 | Android 13 / API 33 | [`matrix-dul5xpu8e4ofa`](https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/7703526244991464826) | Passed, 0 failed / 1 passed / 1 total device | `artifacts/testlab/yanlong-pixel7-matrix.png`, `artifacts/testlab/yanlong-pixel7-logs.png`, `artifacts/testlab/yanlong-pixel7-robo-screenshots.png` |
 
-- San CHIHUN (22162424): Pixel 5, Android 13, portrait Robo test focused on Campus readiness, permissions and Firebase status.
-- Yanlong Yang (22519263): Pixel 7, Android 14, portrait Robo test focused on login, browsing, item detail and booking request flow.
+San's Pixel 5 run started on 01/06/2026 at 18:36 and completed a 5 minute 10 second Robo crawl with 71 actions, 3 activities and 20 screens. Yanlong's Pixel 7 run started on 01/06/2026 at 19:03 and completed a 5 minute 14 second Robo crawl with 80 actions, 2 activities and 24 screens.
 
-Evidence to include:
+Test Lab result links:
 
-- test matrix screenshot
-- device model and Android version
-- pass/fail status
-- logs or screenshots from the run
-- reflection on any failures or limitations
+- San execution: <https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/6349751831038791453/executions/bs.2a39905167331f15>
+- Yanlong execution: <https://console.firebase.google.com/project/fir-config-6fa5c/testlab/histories/bh.e66e78829591fbd0/matrices/7703526244991464826/executions/bs.e23223e54c079b9e>
+
+Reflection: Test Lab proved that the APK installed, launched and survived automated navigation on real cloud Android devices. The Robo screenshots show the login, listing and posting screens being reached. The limitation is that Robo does not understand the intended booking scenario or university email verification flow, so the Test Lab evidence is combined with Jest tests, lint/typecheck and manual walkthrough checks.
 
 ## Deployment / Build Evidence
 
-Recommended build approach:
+Build approach used:
 
 ```bash
 npm run testlab:preflight
@@ -78,7 +79,13 @@ npx eas-cli@latest login
 npm run build:android:testlab
 ```
 
-Use `npm run build:android:production-apk` if the submission needs the build to be labelled as a production APK.
+The APK build completed successfully in EAS:
+
+- EAS build: <https://expo.dev/accounts/qgdr-03/projects/my-app/builds/6e8dc1d0-affd-4889-825d-b49a0c949d0f>
+- APK artifact: <https://expo.dev/artifacts/eas/eDN99fdcELQRnzbNmcrnSP.apk>
+- Local APK copy for Test Lab upload: `artifacts/testlab/UniLease-testlab.apk` (ignored by Git because APKs are large build artifacts)
+
+`npm run testlab:preflight` passed before the Firebase Test Lab upload: TypeScript completed with no errors, Expo lint completed with no errors, and Jest passed 6 test suites / 12 tests.
 
 Submission should include:
 
@@ -90,18 +97,18 @@ Submission should include:
 
 ## Limitations and Improvements
 
-**Completed in prototype:**
+**Completed in prototype and evidence:**
 
 - Firebase project configured (`fir-config-6fa5c`) with local `.env` (not committed)
 - Email/password sign-up with university domain validation
 - Firestore `users/{uid}` profile on sign-up
 - Email verification flow in Profile (resend + refresh)
+- EAS Android APK built for Firebase Test Lab
+- Firebase Test Lab Robo tests passed on Pixel 5 API 30 and Pixel 7 API 33
 
 **Still recommended for final submission evidence:**
 
 - Firestore screenshots for **listings**, **bookings**, status updates and ratings (after using those flows)
-- Firebase Test Lab run screenshots (see `firebase-test-lab-script.md` and `artifacts/testlab/README.md`)
-- APK/AAB build screenshots and EAS build URL
 - GitHub and Azure DevOps contribution evidence
 - AdMob banner screenshot from EAS development or preview build (not Expo Go)
 - Screenshots of the updated Stitch-style Home, Explore, Post, Campus and Profile screens
