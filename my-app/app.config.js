@@ -6,6 +6,7 @@ dotenv.config();
 module.exports = ({ config }) => {
   const androidAdMobAppId = process.env.ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~3347511713';
   const iosAdMobAppId = process.env.ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511';
+  const existingExtra = config.extra || {};
 
   return {
     ...config,
@@ -22,6 +23,7 @@ module.exports = ({ config }) => {
       ],
     ],
     extra: {
+      ...existingExtra,
       FIREBASE_API_KEY: process.env.FIREBASE_API_KEY,
       FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN,
       FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
