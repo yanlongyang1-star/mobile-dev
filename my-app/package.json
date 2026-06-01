@@ -12,7 +12,11 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --runInBand",
     "export:web": "expo export --platform web",
-    "build:android:preview": "eas build -p android --profile preview"
+    "testlab:preflight": "npm run typecheck && npm run lint && npm run test",
+    "build:android:preview": "npx eas-cli@latest build -p android --profile preview",
+    "build:android:testlab": "npm run testlab:preflight && npx eas-cli@latest build -p android --profile testlab",
+    "build:android:production-apk": "npm run testlab:preflight && npx eas-cli@latest build -p android --profile production-apk",
+    "testlab:robo:help": "node ./scripts/firebase-test-lab-help.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

@@ -6,7 +6,7 @@ Use this when rehearsing for your lecturer. Tick each item after you capture a s
 
 1. **Firebase Authentication** — sign-up, login, email verification  
 2. **Cloud Firestore** — shared cloud database (`users`, `items`, `bookings`)  
-3. **Firebase Test Lab** — automated Android device testing of the preview APK  
+3. **Firebase Test Lab** - automated Android device testing of the EAS APK
 
 Plus **SQLite** on device (not Firebase) for offline booking reliability.
 
@@ -19,15 +19,16 @@ Plus **SQLite** on device (not Firebase) for offline booking reliability.
 | 3 | Console: **Firestore → users → {uid}** | Profile document: email, displayName, emailVerified |
 | 4 | App: **Profile** tab | Verification status; Resend / Refresh after email link |
 | 5 | App: **Campus** parallel check | SQLite + Firestore both Ready |
-| 6 | Slide: **Test Lab** matrix (when run) | Cloud devices test our APK, not just Expo Go |
+| 6 | Screenshot: **Test Lab** matrix | Cloud devices test our APK, not just Expo Go |
 
 ## Screenshots to collect
 
 - [ ] Firestore `users/{uid}` (done if you signed up successfully)
 - [ ] Authentication user list
 - [ ] Profile showing email verified (before and after link)
-- [ ] Test Lab device matrix + pass/fail
-- [ ] EAS preview build success page
+- [ ] Test Lab device matrix + pass/fail for San CHIHUN on Pixel 5 / Android 13
+- [ ] Test Lab device matrix + pass/fail for Yanlong Yang on Pixel 7 / Android 14
+- [ ] EAS APK build success page
 
 ## Why each technology (short)
 

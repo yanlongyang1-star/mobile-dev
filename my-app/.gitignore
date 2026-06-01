@@ -37,6 +37,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# build and Test Lab outputs
+*.apk
+*.aab
+artifacts/testlab/*.zip
+
 app-example
 
 # generated native folders

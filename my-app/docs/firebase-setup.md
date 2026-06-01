@@ -45,11 +45,18 @@ Sign-up only works when `FIREBASE_API_KEY` is set. Without it, the app uses **de
 ## 5. Test Lab (assessment evidence)
 
 ```bash
-npm run typecheck && npm run lint && npm run test
-npm run build:android:preview
+npm run testlab:preflight
+npx eas-cli@latest login
+npm run build:android:testlab
 ```
 
-Upload the preview APK in Firebase **Test Lab** → Robo test → screenshot matrix + logs.
+If the lecturer asks for a production version by name:
+
+```bash
+npm run build:android:production-apk
+```
+
+Upload the APK in Firebase **Test Lab** -> Robo test -> screenshot matrix + logs. Use the device split in `docs/firebase-test-lab-cursor-runbook.md`.
 
 ## 6. Evidence checklist
 

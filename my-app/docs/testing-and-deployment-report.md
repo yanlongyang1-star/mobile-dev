@@ -2,11 +2,14 @@
 
 ## Automated Test Coverage
 
-The project includes three Jest test files:
+The project includes six Jest test files:
 
 - `__tests__/date.unit.test.ts`: validates date parsing, inclusive rental day calculation and date addition.
+- `__tests__/listing-moderation.unit.test.ts`: verifies clean listing text is allowed and profanity is flagged/masked before submission.
+- `__tests__/campus-distance.unit.test.ts`: verifies Campus handover distance logic chooses the nearest La Trobe zone.
 - `__tests__/booking.integration.test.ts`: verifies item data integrates with booking quote and date validation logic.
 - `__tests__/borrower-flow.e2e.test.ts`: models the borrower path from search to item selection, booking quote and handover data.
+- `__tests__/login-ui.test.ts`: renders the login screen and checks invalid credentials show a clear error without navigation.
 
 Run tests with:
 
@@ -49,12 +52,12 @@ Expected result: no TypeScript or lint errors.
 
 ## Firebase Test Lab Evidence
 
-Each student should run a different device configuration in Firebase Test Lab and include screenshots/logs.
+Each student should run a different device configuration in Firebase Test Lab and include screenshots/logs. The app needs an EAS-built Android APK before Firebase Test Lab can run.
 
 Suggested split:
 
-- Student A: Pixel 7, Android 14, portrait smoke test.
-- Student B: Pixel 5, Android 13, booking and Campus screen test.
+- San CHIHUN (22162424): Pixel 5, Android 13, portrait Robo test focused on Campus readiness, permissions and Firebase status.
+- Yanlong Yang (22519263): Pixel 7, Android 14, portrait Robo test focused on login, browsing, item detail and booking request flow.
 
 Evidence to include:
 
@@ -69,12 +72,13 @@ Evidence to include:
 Recommended build approach:
 
 ```bash
-npm run typecheck
-npm run lint
-npm run test
+npm run testlab:preflight
 npx expo-doctor
-npm run build:android:preview
+npx eas-cli@latest login
+npm run build:android:testlab
 ```
+
+Use `npm run build:android:production-apk` if the submission needs the build to be labelled as a production APK.
 
 Submission should include:
 
@@ -96,7 +100,7 @@ Submission should include:
 **Still recommended for final submission evidence:**
 
 - Firestore screenshots for **listings**, **bookings**, status updates and ratings (after using those flows)
-- Firebase Test Lab run screenshots (see `firebase-test-lab-script.md`)
+- Firebase Test Lab run screenshots (see `firebase-test-lab-script.md` and `artifacts/testlab/README.md`)
 - APK/AAB build screenshots and EAS build URL
 - GitHub and Azure DevOps contribution evidence
 - AdMob banner screenshot from EAS development or preview build (not Expo Go)

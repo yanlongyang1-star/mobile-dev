@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Capture **Assessment 4** evidence for **Firebase Test Lab** (third Firebase technology alongside Authentication and Firestore). Each team member can run a **different device** and attach screenshots to the report.
+Capture **Assessment 4** evidence for **Firebase Test Lab** (third Firebase technology alongside Authentication and Firestore). San CHIHUN and Yanlong Yang should run **different devices** and attach screenshots/logs to the testing report.
 
 **Project:** `firebaseConfig` (`fir-config-6fa5c`) in Firebase Console.
 
@@ -10,19 +10,24 @@ Capture **Assessment 4** evidence for **Firebase Test Lab** (third Firebase tech
 
 ```bash
 cd my-app
-npm run typecheck
-npm run lint
-npm run test
-npm run build:android:preview
+npm run testlab:preflight
+npx eas-cli@latest login
+npm run build:android:testlab
 ```
 
-Download the **preview APK** from the EAS build page when the build finishes.
+If the marker specifically asks for a production-named build, use:
+
+```bash
+npm run build:android:production-apk
+```
+
+Download the **APK** from the EAS build page when the build finishes. Save the APK and screenshots under `artifacts/testlab/`.
 
 ## Test Lab run (Console)
 
 1. [Firebase Console](https://console.firebase.google.com/) → project **`firebaseConfig`**
 2. Left menu → **Run** → **Test Lab** (or Quality → Test Lab)
-3. **Run a test** → upload the preview **APK**
+3. **Run a test** -> upload the **APK**
 4. Test type: **Robo test** (automated UI exploration)
 5. Select **one device** (see table below)
 6. **Start test** → wait for completion
@@ -39,13 +44,12 @@ Download the **preview APK** from the EAS build page when the build finishes.
 
 | Student | Device | Android | Focus flows |
 | --- | --- | --- | --- |
-| Student A | Pixel 7 | 14 | Login, sign-up, browse listings |
-| Student B | Pixel 5 | 13 | Campus GPS, battery, notifications |
-| Student C | Pixel 6 | 12 | Booking request, profile |
+| San CHIHUN (22162424) | Pixel 5 | 13 | Campus readiness, permissions, Firebase status |
+| Yanlong Yang (22519263) | Pixel 7 | 14 | Login, browse listings, item detail, booking request |
 
 ## Notes for report
 
-- **Expo Go** cannot fully test **AdMob**, **background location**, or some native modules — use the **EAS preview APK** for Test Lab (expected for Expo + custom native code).
+- **Expo Go** cannot fully test **AdMob**, **background location**, or some native modules - use the **EAS APK** for Test Lab (expected for Expo + custom native code).
 - **Robo test** is smoke-level; pair with Jest (`npm run test`) and manual device checklist in `testing-and-deployment-report.md`.
 - Firebase **secrets** stay in local `.env` only — cite “configured via environment variables” in the report, not the API key.
 
