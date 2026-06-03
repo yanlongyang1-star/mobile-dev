@@ -18,6 +18,28 @@ export const CAMPUS_ZONES: CampusZone[] = [
   { name: 'Main Entrance', latitude: -37.7197, longitude: 145.0478 },
 ];
 
+export type CampusMapPlatform = 'android' | 'ios' | 'web' | 'macos' | 'windows';
+
+export function getCampusMapUrlCandidates(zone: CampusZone, platform: CampusMapPlatform) {
+  const coordinates = `${zone.latitude},${zone.longitude}`;
+  const encodedCoordinates = encodeURIComponent(coordinates);
+  const encodedLabel = encodeURIComponent(zone.name);
+  const googleMapsWebUrl = `https://www.google.com/maps/search/?api=1&query=${encodedCoordinates}`;
+  const androidGeoUrl = `geo:0,0?q=${encodedCoordinates}(${encodedLabel})`;
+  const iosGoogleMapsUrl = `comgooglemaps://?q=${encodedCoordinates}&center=${encodedCoordinates}&zoom=17`;
+  const iosAppleMapsUrl = `http://maps.apple.com/?ll=${coordinates}&q=${encodedLabel}`;
+
+  if (platform === 'android') {
+    return [androidGeoUrl, googleMapsWebUrl];
+  }
+
+  if (platform === 'ios') {
+    return [iosGoogleMapsUrl, iosAppleMapsUrl, googleMapsWebUrl];
+  }
+
+  return [googleMapsWebUrl];
+}
+
 export function distanceMeters(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
   const earthRadius = 6371000;
   const toRad = (value: number) => (value * Math.PI) / 180;

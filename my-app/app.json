@@ -16,7 +16,10 @@
         "NSFaceIDUsageDescription": "UniLease uses Face ID only to unlock the app. Your face data stays on device; we only receive pass or fail.",
         "NSLocationWhenInUseUsageDescription": "UniLease uses location to recommend the closest campus handover zone.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "UniLease can monitor active handover proximity during a booking.",
-        "NSMotionUsageDescription": "UniLease uses motion data to support item condition checks during handover."
+        "NSMotionUsageDescription": "UniLease uses motion data to support item condition checks during handover.",
+        "LSApplicationQueriesSchemes": [
+          "comgooglemaps"
+        ]
       }
     },
     "android": {

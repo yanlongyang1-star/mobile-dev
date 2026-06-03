@@ -12,6 +12,7 @@ import { useThemeColors } from '@/hooks/use-theme-colors';
 import {
   CAMPUS_ZONES,
   getBatterySnapshot,
+  getCampusMapUrlCandidates,
   getNearestCampusZone,
   runParallelReadinessCheck,
 } from '@/services/campusCapabilities';
@@ -28,6 +29,34 @@ type TaskStatus = Awaited<ReturnType<typeof getHandoverTaskStatus>> | null;
 
 function statusText(result: PromiseSettledResult<unknown>) {
   return result.status === 'fulfilled' ? 'Ready' : 'Needs attention';
+}
+
+async function openFirstMapUrl(urls: string[]) {
+  const [primaryUrl] = urls;
+
+  if (Platform.OS === 'web' && primaryUrl) {
+    if (typeof window !== 'undefined' && typeof window.open === 'function') {
+      const openedWindow = window.open(primaryUrl, '_blank', 'noopener,noreferrer');
+      if (openedWindow) {
+        return primaryUrl;
+      }
+    }
+
+    await Linking.openURL(primaryUrl);
+    return primaryUrl;
+  }
+
+  let lastError: unknown = null;
+  for (const url of urls) {
+    try {
+      await Linking.openURL(url);
+      return url;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError ?? new Error('No campus map URL could be opened.');
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
@@ -107,9 +136,17 @@ export default function CampusScreen() {
 
   const openCampusMap = async () => {
     const zone = nearest?.granted ? nearest.nearest : CAMPUS_ZONES[0];
-    const url = `https://www.google.com/maps/search/?api=1&query=${zone.latitude},${zone.longitude}`;
-    await Linking.openURL(url);
-    setMessage(`Opening map for ${zone.name}.`);
+    const urls = getCampusMapUrlCandidates(zone, Platform.OS);
+
+    setMessage(`Opening map for ${zone.name}...`);
+    try {
+      await openFirstMapUrl(urls);
+      setMessage(`Opening map for ${zone.name}.`);
+    } catch {
+      setMessage(
+        `Unable to open Maps automatically. Search Google Maps for ${zone.name} at ${zone.latitude}, ${zone.longitude}.`
+      );
+    }
   };
 
   const runParallel = async () => {
